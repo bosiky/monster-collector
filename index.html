@@ -1,0 +1,299 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Monster Collector - A strategic card game where players race to collect monster cards. Supports 2-3 players with skill cards for stealing, shielding, and swapping.">
+  <title>Monster Collector | 怪獸收集者</title>
+  <link rel="stylesheet" href="css/index.css?v=4">
+  <link rel="stylesheet" href="css/cards.css?v=4">
+  <link rel="stylesheet" href="css/game.css?v=4">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='80'>🐉</text></svg>">
+</head>
+<body>
+
+  <!-- Background Particles -->
+  <div class="bg-particles" id="bg-particles"></div>
+
+  <!-- Navigation -->
+  <nav class="nav-tabs hidden" id="main-nav">
+    <button class="nav-tab" data-page="home">🏠 首頁</button>
+    <button class="nav-tab" data-page="gallery">📖 卡牌圖鑑</button>
+    <button class="nav-tab" data-page="game">🎮 遊戲</button>
+    <button class="nav-tab" data-page="generator">🎨 卡牌生成器</button>
+  </nav>
+
+  <!-- ================================ -->
+  <!-- PAGE: Home                       -->
+  <!-- ================================ -->
+  <div class="page active" id="page-home">
+    <div class="home-logo">
+      <div class="logo-glow"></div>
+      <div class="logo-icon">🐉</div>
+    </div>
+
+    <h1 class="home-title">Monster Collector</h1>
+    <p class="home-subtitle">怪獸收集者 — 策略卡牌對戰遊戲</p>
+
+    <div class="home-settings">
+      <div class="setting-row">
+        <span class="setting-label">遊戲人數</span>
+        <div class="setting-value">
+          <div class="number-input">
+            <button id="btn-players-minus">−</button>
+            <span class="value" id="val-players">2</span>
+            <button id="btn-players-plus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">勝利條件（怪物卡數量）</span>
+        <div class="setting-value">
+          <div class="number-input">
+            <button id="btn-target-minus">−</button>
+            <span class="value" id="val-target">5</span>
+            <button id="btn-target-plus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">牌組資訊</span>
+        <div class="setting-value">
+          <span class="text-muted" style="font-size:0.85rem" id="val-deck-info">14 怪物 + 9 技能 = 23 張（不發手牌）</span>
+        </div>
+      </div>
+
+      <!-- Player Names -->
+      <div class="player-names-section" id="player-names-section">
+        <div class="section-title">玩家名稱</div>
+        <div class="player-name-row">
+          <div class="player-color-dot" style="background:var(--color-player-1)"></div>
+          <input type="text" id="player-name-1" value="玩家1" maxlength="10">
+        </div>
+        <div class="player-name-row">
+          <div class="player-color-dot" style="background:var(--color-player-2)"></div>
+          <input type="text" id="player-name-2" value="玩家2" maxlength="10">
+        </div>
+        <div class="player-name-row hidden" id="player-name-3-row">
+          <div class="player-color-dot" style="background:var(--color-player-3)"></div>
+          <input type="text" id="player-name-3" value="玩家3" maxlength="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="home-actions">
+      <button class="btn btn-gold btn-lg" id="btn-start-game">
+        <span>⚔️</span> 開始遊戲
+      </button>
+      <button class="btn btn-primary" id="btn-to-gallery">
+        <span>📖</span> 瀏覽卡牌圖鑑
+      </button>
+      <button class="btn btn-outline" id="btn-to-generator">
+        <span>🎨</span> 卡牌生成器
+      </button>
+    </div>
+
+    <!-- Rules Quick Reference -->
+    <div class="rules-panel">
+      <h3>📜 遊戲規則</h3>
+      <div class="rule-item">
+        <span class="rule-icon">🎯</span>
+        <span>最先將指定數量的怪物卡放入收集站的玩家獲勝</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🔄</span>
+        <span>每回合：抽牌 → 行動（放置怪物/使用技能/跳過）→ 棄牌</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🦹</span>
+        <span><strong>盜賊卡</strong>：偷走對手收集站 1 張怪物卡</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🛡️</span>
+        <span><strong>防禦盾</strong>：抵擋一次盜賊卡攻擊</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🧨</span>
+        <span><strong>TNT</strong>：與對手隨機交換 1 張手牌</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🃏</span>
+        <span>一開始沒有手牌，每回合抽 1 張，手牌上限 7 張</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- PAGE: Gallery                    -->
+  <!-- ================================ -->
+  <div class="page" id="page-gallery">
+    <div class="gallery-header">
+      <h1>Card Gallery</h1>
+      <p class="text-muted" style="font-family:var(--font-chinese);margin-top:8px">點擊卡牌查看大圖</p>
+      <div class="gallery-tabs">
+        <button class="gallery-tab active" data-filter="all">全部</button>
+        <button class="gallery-tab" data-filter="monster">🐉 怪物卡</button>
+        <button class="gallery-tab" data-filter="skill">⚡ 技能卡</button>
+      </div>
+    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- PAGE: Game                       -->
+  <!-- ================================ -->
+  <div class="page" id="page-game">
+    <!-- Game Header -->
+    <div class="game-header">
+      <div class="game-title">Monster Collector</div>
+      <div class="turn-indicator" id="turn-indicator">
+        <span class="player-dot" style="background:var(--color-player-1)"></span>
+        <span>P1 的回合</span>
+      </div>
+      <div class="game-actions">
+        <button class="btn btn-sm btn-outline" onclick="App.toggleLog()">📋 紀錄</button>
+        <button class="btn btn-sm btn-danger" data-page="home">✕ 離開</button>
+      </div>
+    </div>
+
+    <!-- Game Table -->
+    <div class="game-table">
+      <!-- Phase Indicator -->
+      <div class="phase-indicator" id="phase-indicator"></div>
+
+      <!-- Opponents -->
+      <div class="opponents-area" id="opponents-area"></div>
+
+      <!-- Center: Deck + Action Prompt + Discard -->
+      <div class="center-area">
+        <div class="deck-zone">
+          <div id="deck-container"></div>
+          <span class="deck-label">抽牌堆 (<span id="deck-count">0</span>)</span>
+        </div>
+
+        <div class="action-prompt" id="action-prompt">
+          <div class="prompt-title">準備開始</div>
+        </div>
+
+        <div class="discard-zone">
+          <div id="discard-container">
+            <div class="empty-discard">棄牌堆</div>
+          </div>
+          <span class="deck-label">棄牌堆</span>
+        </div>
+      </div>
+
+      <!-- Player Station -->
+      <div class="player-station">
+        <div style="min-width:140px">
+          <div class="station-label" id="player-station-name">
+            <span style="color:var(--color-player-1)">●</span> P1 的收集站
+          </div>
+          <div class="station-progress" id="player-station-progress">0 / 5</div>
+        </div>
+        <div class="station-slots" id="player-station-slots"></div>
+      </div>
+
+      <!-- Player Hand -->
+      <div style="text-align:center">
+        <span class="deck-label" id="hand-count">手牌: 0</span>
+      </div>
+      <div class="player-hand" id="player-hand"></div>
+    </div>
+
+    <!-- Game Log Sidebar -->
+    <div class="game-log" id="game-log">
+      <h3>
+        遊戲紀錄
+        <button class="btn btn-sm btn-outline" onclick="App.toggleLog()">✕</button>
+      </h3>
+      <div id="game-log-list"></div>
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- PAGE: Generator                  -->
+  <!-- ================================ -->
+  <div class="page" id="page-generator">
+    <div class="gallery-header">
+      <h1>Card Generator</h1>
+      <p class="text-muted" style="font-family:var(--font-chinese);margin-top:8px">上傳圖片，自訂你的專屬卡牌</p>
+    </div>
+
+    <div class="generator-container">
+      <!-- Form -->
+      <div class="generator-form">
+        <div class="image-upload" id="gen-upload">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">點擊或拖放圖片上傳</div>
+          <div class="upload-text text-muted" style="font-size:0.8rem;margin-top:4px">支援 JPG, PNG, WebP</div>
+          <input type="file" id="gen-file-input" accept="image/*" style="display:none">
+        </div>
+
+        <div class="input-group">
+          <label for="gen-name">卡牌名稱</label>
+          <input type="text" id="gen-name" class="input-field" value="自訂怪物" placeholder="輸入名稱...">
+        </div>
+
+        <div class="input-group">
+          <label for="gen-type">卡牌類型</label>
+          <select id="gen-type" class="input-field">
+            <option value="monster">🐉 怪物卡</option>
+            <option value="skill">⚡ 技能卡</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="gen-rarity">稀有度</label>
+          <select id="gen-rarity" class="input-field">
+            <option value="1">★ 普通</option>
+            <option value="2">★★ 稀有</option>
+            <option value="3">★★★ 傳說</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="gen-description">說明文字</label>
+          <input type="text" id="gen-description" class="input-field" value="神秘的自訂怪物" placeholder="描述...">
+        </div>
+
+        <button class="btn btn-primary" id="btn-generate-card">🎨 生成卡牌</button>
+      </div>
+
+      <!-- Preview -->
+      <div class="generator-preview">
+        <h3>預覽</h3>
+        <div id="gen-preview-image" style="min-height:400px;display:flex;align-items:center;justify-content:center">
+          <span class="text-muted" style="font-family:var(--font-chinese)">生成預覽將顯示在此處</span>
+        </div>
+        <button class="btn btn-gold" id="btn-export-card" disabled>
+          💾 匯出 PNG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- Card Preview Overlay             -->
+  <!-- ================================ -->
+  <div class="card-preview-overlay" id="card-preview">
+    <div id="card-preview-card"></div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- Modal Overlay                    -->
+  <!-- ================================ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-content"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/cards.js?v=4"></script>
+  <script src="js/animations.js?v=4"></script>
+  <script src="js/game.js?v=4"></script>
+  <script src="js/generator.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
+</body>
+</html>
