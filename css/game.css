@@ -679,18 +679,64 @@
 /* Player Collection Station */
 .player-station {
   display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-bg-elevated);
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(22,101,52,0.15), rgba(16,185,129,0.08));
   border-radius: var(--radius-lg);
   border: 1px solid rgba(22,101,52,0.3);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.player-station:hover {
+  border-color: rgba(16,185,129,0.5);
+}
+
+.station-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.station-card-bg {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(16,185,129,0.3);
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.station-card-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.station-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.station-type {
+  font-family: var(--font-chinese);
+  font-size: 0.7rem;
+  color: rgba(16,185,129,0.7);
+  margin-top: 2px;
+  letter-spacing: 1px;
 }
 
 .player-station .station-label {
   font-family: var(--font-chinese);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--color-accent-emerald);
   white-space: nowrap;
   display: flex;
@@ -699,15 +745,47 @@
 }
 
 .player-station .station-progress {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
   font-family: var(--font-chinese);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .station-slots {
   display: flex;
-  gap: var(--space-xs);
+  gap: 6px;
   flex-wrap: wrap;
+  padding-top: var(--space-xs);
+}
+
+.station-slots .collection-slot {
+  width: 44px;
+  height: 60px;
+  border-radius: 6px;
+  border: 1px dashed rgba(16,185,129,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.station-slots .collection-slot.filled {
+  border-style: solid;
+  border-color: rgba(16,185,129,0.4);
+  background: linear-gradient(135deg, rgba(107,33,168,0.3), rgba(16,185,129,0.15));
+  box-shadow: 0 0 8px rgba(16,185,129,0.15);
+}
+
+.station-slots .collection-slot .slot-number {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.15);
+  font-family: var(--font-display);
 }
 
 /* Player Hand */

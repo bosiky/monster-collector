@@ -8,6 +8,7 @@ const App = {
   settings: {
     playerCount: 2,
     targetCards: 12,
+    maxHand: 7,
     playerNames: ['玩家1', '玩家2', '玩家3']
   },
   logOpen: false,
@@ -21,7 +22,19 @@ const App = {
     this.bindHomeSettings();
     this.bindLobby();
     this.initParticles();
+    this.autoRandomizeNames();
     this.showPage('home');
+  },
+
+  autoRandomizeNames() {
+    const pool = ['帥哥', '漂亮姊姊', '大叔', '阿貝', '阿珠瑪', '喔爸', '北鼻'];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < 3; i++) {
+      const name = shuffled[i % shuffled.length];
+      this.settings.playerNames[i] = name;
+      const input = document.getElementById(`player-name-${i + 1}`);
+      if (input) input.value = name;
+    }
   },
 
   // ============================
@@ -124,6 +137,15 @@ const App = {
         }
       });
     }
+    // Hand limit
+    document.getElementById('btn-hand-minus').addEventListener('click', () => {
+      this.settings.maxHand = Math.max(5, this.settings.maxHand - 1);
+      this.updateSettingsDisplay();
+    });
+    document.getElementById('btn-hand-plus').addEventListener('click', () => {
+      this.settings.maxHand = Math.min(12, this.settings.maxHand + 1);
+      this.updateSettingsDisplay();
+    });
 
     // Player name inputs
     for (let i = 1; i <= 3; i++) {
@@ -154,6 +176,7 @@ const App = {
   updateSettingsDisplay() {
     document.getElementById('val-players').textContent = this.settings.playerCount;
     document.getElementById('val-target').textContent = this.settings.targetCards;
+    document.getElementById('val-hand').textContent = this.settings.maxHand;
 
     const counts = CARD_COUNTS[this.settings.playerCount];
     const totalMonsters = CARD_DATA.monsters.length * counts.monsterCopies;
@@ -356,6 +379,7 @@ const App = {
     this.game = new MonsterCollectorGame({
       playerCount: this.settings.playerCount,
       targetCards: this.settings.targetCards,
+      maxHand: this.settings.maxHand,
       playerNames: this.settings.playerNames.slice(0, this.settings.playerCount),
       onStateChange: (state) => this.onGameStateChange(state),
       onGameLog: (entry) => this.renderLogEntry(entry),
@@ -612,19 +636,31 @@ const App = {
       <span style="color:${playerColors[state.currentPlayer]}">●</span>
       ${player.name} 的收集站
       ${player.hasShield ? '<span class="shield-indicator" style="position:static;margin-left:8px">🛡️</span>' : ''}
+      ${player.skipDraw ? '<span style="color:#0ea5e9;font-size:0.7rem;margin-left:4px">🥶靜止中</span>' : ''}
     `;
     document.getElementById('player-station-progress').textContent =
       `${player.collection.length} / ${this.settings.targetCards}`;
+
+    // Show station card image
+    const stationImg = document.getElementById('station-card-image');
+    const stationTypeName = document.getElementById('station-type-name');
+    if (player.stationCard) {
+      stationImg.src = player.stationCard.image;
+      stationImg.alt = player.stationCard.name;
+      stationImg.style.display = 'block';
+      if (stationTypeName) stationTypeName.textContent = player.stationCard.name;
+    } else {
+      stationImg.style.display = 'none';
+      if (stationTypeName) stationTypeName.textContent = '';
+    }
 
     // Render filled slots
     player.collection.forEach((card) => {
       const slot = document.createElement('div');
       slot.className = 'collection-slot filled';
       slot.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;font-size:0.5rem">
-          <span style="font-size:1.4rem">${card.emoji}</span>
-          <span style="font-family:var(--font-chinese);color:var(--color-text-muted)">${card.name}</span>
-        </div>
+        <span style="font-size:1.2rem">${card.emoji}</span>
+        <span style="font-family:var(--font-chinese);color:var(--color-text-muted);font-size:0.5rem">${card.name}</span>
       `;
       container.appendChild(slot);
     });
@@ -707,7 +743,7 @@ const App = {
         this.game.skipAction();
       });
     } else if (state.phase === 'discard') {
-      const excess = state.players[state.currentPlayer].hand.length - 7;
+      const excess = state.players[state.currentPlayer].hand.length - this.settings.maxHand;
       if (excess > 0) {
         container.innerHTML = `
           <div class="prompt-title">🗑️ 棄牌階段</div>
@@ -1137,6 +1173,7 @@ const App = {
     this.game = new MonsterCollectorGame({
       playerCount: this.settings.playerCount,
       targetCards: this.settings.targetCards,
+      maxHand: this.settings.maxHand,
       playerNames: this.settings.playerNames,
       onStateChange: (state) => this.onOnlineHostStateChange(state),
       onGameLog: (entry) => {

@@ -5,7 +5,8 @@
 class MonsterCollectorGame {
   constructor(config) {
     this.playerCount = config.playerCount || 2;
-    this.targetCards = config.targetCards || 5;
+    this.targetCards = config.targetCards || 12;
+    this.maxHand = config.maxHand || 7;
     this.playerNames = config.playerNames || [];
     
     // Fill default names
@@ -339,10 +340,9 @@ class MonsterCollectorGame {
    * Phase 3: Check if discard is needed
    */
   checkDiscard() {
-    const MAX_HAND = 7;
-    if (this.current.hand.length > MAX_HAND) {
+    if (this.current.hand.length > this.maxHand) {
       this.state.phase = 'discard';
-      this.addLog(`${this.currentPlayerName()} 手牌超過 ${MAX_HAND} 張，需要棄牌`);
+      this.addLog(`${this.currentPlayerName()} 手牌超過 ${this.maxHand} 張，需要棄牌`);
       this.emitState();
     } else {
       this.endTurn();
@@ -364,7 +364,7 @@ class MonsterCollectorGame {
 
     this.addLog(`${this.currentPlayerName()} 棄掉了 ${card.emoji} ${card.name}`);
 
-    if (hand.length <= 7) {
+    if (hand.length <= this.maxHand) {
       this.endTurn();
     } else {
       this.emitState();
@@ -417,7 +417,7 @@ class MonsterCollectorGame {
     }
 
     if (this.state.phase === 'discard') {
-      actions.push({ type: 'discard', label: `棄牌 (需棄 ${this.current.hand.length - 7} 張)` });
+      actions.push({ type: 'discard', label: `棄牌 (需棄 ${this.current.hand.length - this.maxHand} 張)` });
     }
 
     return actions;

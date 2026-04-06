@@ -153,7 +153,7 @@ const CARD_DATA = {
       emoji: '💣',
       color: '#f97316',
       image: 'assets/skills/tnt-1.png',
-      description: '炸毀對手收集站1張怪物卡',
+      description: '依炸彈數量炸毀1張怪物卡',
       effect: 'bomb',
       bombPower: 1
     },
@@ -164,9 +164,9 @@ const CARD_DATA = {
       emoji: '💥',
       color: '#ef4444',
       image: 'assets/skills/tnt-3.png',
-      description: '炸毀對手收集站2張怪物卡',
+      description: '依炸彈數量炸毀3張怪物卡',
       effect: 'bomb',
-      bombPower: 2
+      bombPower: 3
     },
     {
       id: 'tnt-5',
@@ -175,9 +175,9 @@ const CARD_DATA = {
       emoji: '🔥',
       color: '#dc2626',
       image: 'assets/skills/tnt-5.png',
-      description: '炸毀對手收集站3張怪物卡',
+      description: '依炸彈數量炸毀5張怪物卡',
       effect: 'bomb',
-      bombPower: 3
+      bombPower: 5
     },
     {
       id: 'freezer',
@@ -186,14 +186,14 @@ const CARD_DATA = {
       emoji: '🥶',
       color: '#0ea5e9',
       image: 'assets/skills/freezer.png',
-      description: '使用後下一回合自己不能抽卡',
+      description: '下一回合不能抽卡一次',
       effect: 'freeze'
     }
   ],
   stations: [
-    { id: 'station-1', name: '兔子站', image: 'assets/stations/station-1.png' },
-    { id: 'station-2', name: '倉鼠站', image: 'assets/stations/station-2.png' },
-    { id: 'station-3', name: '機器人站', image: 'assets/stations/station-3.png' }
+    { id: 'station-1', name: '狗狗UFO', image: 'assets/stations/station-1.png' },
+    { id: 'station-2', name: '貓貓UFO', image: 'assets/stations/station-2.png' },
+    { id: 'station-3', name: '喵星巴士', image: 'assets/stations/station-3.png' }
   ]
 };
 

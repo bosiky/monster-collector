@@ -57,11 +57,21 @@
           </div>
         </div>
       </div>
+      <div class="setting-row">
+        <span class="setting-label">手牌上限</span>
+        <div class="setting-value">
+          <div class="number-input">
+            <button id="btn-hand-minus">−</button>
+            <span class="value" id="val-hand">7</span>
+            <button id="btn-hand-plus">+</button>
+          </div>
+        </div>
+      </div>
 
       <div class="setting-row">
         <span class="setting-label">牌組資訊</span>
         <div class="setting-value">
-          <span class="text-muted" style="font-size:0.85rem" id="val-deck-info">14 怪物 + 9 技能 = 23 張（不發手牌）</span>
+          <span class="text-muted" style="font-size:0.85rem" id="val-deck-info">24 怪物 + 12 技能 = 36 張（不發手牌）</span>
         </div>
       </div>
 
@@ -128,19 +138,19 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">💣</span>
-        <span><strong>TNT×1</strong>：炸毀對手收集站 1 張怪物卡</span>
+        <span><strong>TNT×1</strong>：依炸彈數量炸毀對手收集站 1 張怪物卡</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">💥</span>
-        <span><strong>TNT×3</strong>：炸毀對手收集站 2 張怪物卡</span>
+        <span><strong>TNT×3</strong>：依炸彈數量炸毀對手收集站 3 張怪物卡</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">🔥</span>
-        <span><strong>TNT×5</strong>：炸毀對手收集站 3 張怪物卡</span>
+        <span><strong>TNT×5</strong>：依炸彈數量炸毀對手收集站 5 張怪物卡</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">🥶</span>
-        <span><strong>靜止器</strong>：使用後下一回合自己不能抽卡</span>
+        <span><strong>靜止器</strong>：下一回合不能抽卡一次</span>
       </div>
 
       <h4 style="font-family:var(--font-chinese);color:var(--color-text-muted);margin:12px 0 6px;font-size:0.9rem">📋 玩法說明</h4>
@@ -158,7 +168,7 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">4️⃣</span>
-        <span>手牌上限 7 張，超過需棄牌</span>
+        <span>手牌上限5～12 張（可設定），超過需棄牌</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">5️⃣</span>
@@ -305,12 +315,18 @@
       </div>
 
       <!-- Player Station -->
-      <div class="player-station">
-        <div style="min-width:140px">
-          <div class="station-label" id="player-station-name">
-            <span style="color:var(--color-player-1)">●</span> P1 的收集站
+      <div class="player-station" id="player-station-container">
+        <div class="station-header">
+          <div class="station-card-bg" id="station-card-bg">
+            <img id="station-card-image" src="" alt="" style="display:none">
           </div>
-          <div class="station-progress" id="player-station-progress">0 / 5</div>
+          <div class="station-info">
+            <div class="station-label" id="player-station-name">
+              <span style="color:var(--color-player-1)">●</span> P1 的收集站
+            </div>
+            <div class="station-type" id="station-type-name"></div>
+            <div class="station-progress" id="player-station-progress">0 / 12</div>
+          </div>
         </div>
         <div class="station-slots" id="player-station-slots"></div>
       </div>
