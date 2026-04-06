@@ -98,7 +98,7 @@
       }
     }
 
-    /* ========== Card Grid: 3x3, zero gap ========== */
+    /* ========== STANDARD CARDS: 3x3 Grid (9 per page) ========== */
     .card-grid {
       width: calc(63.5mm * 3);
       height: calc(88.9mm * 3);
@@ -107,8 +107,6 @@
       align-content: flex-start;
       gap: 0;
     }
-
-    /* ========== Card Wrapper (63.5mm × 88.9mm) ========== */
     .card-wrapper {
       width: 63.5mm;
       height: 88.9mm;
@@ -116,7 +114,28 @@
       margin: 0;
     }
 
-    /* ========== Card Face ========== */
+    /* ========== LARGE CARDS (Stations): 2x2 Grid (4 per page) ========== */
+    .card-grid-lg {
+      /* Increased to ~95mm x 133mm each to fit nicely as 4 cards on A4 */
+      width: calc(95mm * 2);
+      height: calc(133mm * 2);
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 0;
+    }
+    .card-wrapper-lg {
+      width: 95mm;
+      height: 133mm;
+      padding: 0;
+      margin: 0;
+    }
+    /* Scale text up a bit for large cards */
+    .card-wrapper-lg .card-header { padding: 6px 8px; font-size: 1rem; }
+    .card-wrapper-lg .card-effect-text { font-size: 0.8rem; }
+    .card-wrapper-lg .card-rarity { font-size: 0.8rem; top: 5px; right: 6px; }
+
+    /* ========== Card Face Shared ========== */
     .card {
       width: 100%;
       height: 100%;
@@ -134,7 +153,7 @@
       font-weight: bold;
       color: white;
       text-align: center;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.8);
       z-index: 2;
       white-space: nowrap;
       overflow: hidden;
@@ -147,6 +166,7 @@
       width: 100%;
       position: relative;
       background: #222;
+      overflow: hidden;
     }
 
     .card-image {
@@ -154,7 +174,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transform: scale(1.12); /* Scale up specifically to crop thick white borders mapped into original TNT images */
+      transform: scale(1.12); /* Crop out baked-in white borders e.g. TNT */
     }
 
     .card-effect-bar {
@@ -173,7 +193,7 @@
       line-height: 1.35;
     }
 
-    /* Rarity stars at top-right */
+    /* Rarity stars */
     .card-rarity {
       position: absolute;
       top: 3px;
@@ -196,133 +216,74 @@
       overflow: hidden;
     }
 
-    /* Outer ornamental border */
+    /* Ornamental borders */
     .card-back-design::before {
       content: '';
       position: absolute;
-      top: 2.5mm;
-      bottom: 2.5mm;
-      left: 2.5mm;
-      right: 2.5mm;
+      top: 2.5mm; bottom: 2.5mm; left: 2.5mm; right: 2.5mm;
       border: 1.5px solid rgba(201, 168, 76, 0.45);
       border-radius: 3px;
       z-index: 1;
     }
-
-    /* Inner ornamental border */
     .card-back-design::after {
       content: '';
       position: absolute;
-      top: 4.5mm;
-      bottom: 4.5mm;
-      left: 4.5mm;
-      right: 4.5mm;
+      top: 4.5mm; bottom: 4.5mm; left: 4.5mm; right: 4.5mm;
       border: 0.5px solid rgba(201, 168, 76, 0.2);
       border-radius: 2px;
       z-index: 1;
     }
 
     /* Corner decorations */
-    .corner-deco {
-      position: absolute;
-      width: 8mm;
-      height: 8mm;
-      z-index: 2;
+    .corner-deco { position: absolute; width: 8mm; height: 8mm; z-index: 2; }
+    .corner-deco::before, .corner-deco::after {
+      content: '✦'; position: absolute; color: rgba(201, 168, 76, 0.5); font-size: 0.45rem;
     }
-    .corner-deco::before,
-    .corner-deco::after {
-      content: '✦';
-      position: absolute;
-      color: rgba(201, 168, 76, 0.5);
-      font-size: 0.45rem;
-    }
+    .card-wrapper-lg .corner-deco::before, .card-wrapper-lg .corner-deco::after { font-size: 0.7rem; }
     .corner-tl { top: 5mm; left: 5mm; }
     .corner-tr { top: 5mm; right: 5mm; }
     .corner-bl { bottom: 5mm; left: 5mm; }
     .corner-br { bottom: 5mm; right: 5mm; }
 
-    /* Radial glow behind star */
+    /* Central star glow */
     .star-glow {
-      position: absolute;
-      width: 30mm;
-      height: 30mm;
-      border-radius: 50%;
+      position: absolute; width: 30mm; height: 30mm; border-radius: 50%;
       background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.04) 40%, transparent 70%);
       z-index: 1;
     }
+    .card-wrapper-lg .star-glow { width: 45mm; height: 45mm; }
 
     /* Central star cluster */
-    .star-center {
-      position: relative;
-      z-index: 3;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-
+    .star-center { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .star-main {
-      font-size: 2.8rem;
-      line-height: 1;
-      color: #ffd700;
-      text-shadow:
-        0 0 8px rgba(255, 215, 0, 0.9),
-        0 0 20px rgba(255, 215, 0, 0.5),
-        0 0 40px rgba(255, 215, 0, 0.25),
-        0 0 60px rgba(255, 215, 0, 0.1);
+      font-size: 2.8rem; line-height: 1; color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.9), 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.25);
       filter: drop-shadow(0 0 3px rgba(255,215,0,0.8));
     }
+    .card-wrapper-lg .star-main { font-size: 4rem; }
+    .star-sub { font-size: 0.9rem; color: rgba(201, 168, 76, 0.7); letter-spacing: 3px; }
+    .card-wrapper-lg .star-sub { font-size: 1.2rem; margin-top: 5px; }
 
-    .star-sub {
-      font-size: 0.9rem;
-      color: rgba(201, 168, 76, 0.7);
-      letter-spacing: 3px;
-      text-shadow: 0 0 6px rgba(201, 168, 76, 0.3);
-    }
+    /* Mini stars */
+    .mini-stars { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2; overflow: hidden; }
+    .mini-star { position: absolute; color: rgba(201, 168, 76, 0.35); font-size: 0.35rem; }
+    .card-wrapper-lg .mini-star { font-size: 0.5rem; }
+    .ms1 { top: 12%; left: 18%; } .ms2 { top: 20%; right: 22%; font-size: 0.25rem; opacity: 0.6; }
+    .ms3 { bottom: 22%; left: 15%; font-size: 0.28rem; } .ms4 { bottom: 15%; right: 18%; }
+    .ms5 { top: 35%; left: 10%; font-size: 0.22rem; opacity: 0.5; } .ms6 { bottom: 35%; right: 10%; font-size: 0.22rem; opacity: 0.5; }
+    .ms7 { top: 10%; left: 45%; font-size: 0.2rem; opacity: 0.4; } .ms8 { bottom: 10%; left: 42%; font-size: 0.2rem; opacity: 0.4; }
 
-    /* Scattered mini stars */
-    .mini-stars {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 2;
-      overflow: hidden;
-    }
-    .mini-star {
-      position: absolute;
-      color: rgba(201, 168, 76, 0.35);
-      font-size: 0.35rem;
-    }
-    .ms1 { top: 12%; left: 18%; }
-    .ms2 { top: 20%; right: 22%; font-size: 0.25rem; opacity: 0.6; }
-    .ms3 { bottom: 22%; left: 15%; font-size: 0.28rem; }
-    .ms4 { bottom: 15%; right: 18%; }
-    .ms5 { top: 35%; left: 10%; font-size: 0.22rem; opacity: 0.5; }
-    .ms6 { bottom: 35%; right: 10%; font-size: 0.22rem; opacity: 0.5; }
-    .ms7 { top: 10%; left: 45%; font-size: 0.2rem; opacity: 0.4; }
-    .ms8 { bottom: 10%; left: 42%; font-size: 0.2rem; opacity: 0.4; }
-
-    /* Title at bottom of back card */
-    .back-title {
-      position: absolute;
-      bottom: 6mm;
-      left: 0;
-      right: 0;
-      text-align: center;
-      z-index: 3;
-    }
-    .back-title span {
-      font-size: 0.35rem;
-      letter-spacing: 2px;
-      color: rgba(201, 168, 76, 0.35);
-      text-transform: uppercase;
-    }
+    /* Title at bottom */
+    .back-title { position: absolute; bottom: 6mm; left: 0; right: 0; text-align: center; z-index: 3; }
+    .back-title span { font-size: 0.35rem; letter-spacing: 2px; color: rgba(201, 168, 76, 0.35); text-transform: uppercase; }
+    .card-wrapper-lg .back-title span { font-size: 0.5rem; }
   </style>
 </head>
 <body>
 
   <div class="controls">
     <h1>⭐ Monster Collector — Card Print</h1>
-    <p>A4 雙面列印（翻轉長邊）· 3×3 無間距排版 · 正面卡牌 / 背面星星</p>
+    <p>一般卡：一頁9張 (3x3) &nbsp; | &nbsp; 基地卡：放大版一頁4張 (2x2)<br>雙面列印時請選擇「短邊翻轉（若印橫向）或長邊翻轉（預設）」</p>
     <div class="btn-group">
       <button class="btn btn-color" onclick="printMode('color')">🎨 彩色列印</button>
       <button class="btn btn-bw" onclick="printMode('bw')">🖤 黑白列印</button>
@@ -345,109 +306,110 @@
     document.addEventListener("DOMContentLoaded", () => {
       const container = document.getElementById('pages-container');
 
-      const allCards = [
+      // Group 1: Standard Cards (Monsters, Skills) -> 9 per page
+      const standardCards = [
         ...CARD_DATA.monsters.map(c => ({...c, cat: 'monster'})),
-        ...CARD_DATA.skills.map(c => ({...c, cat: 'skill'})),
-        ...CARD_DATA.stations.map(c => ({...c, cat: 'station'}))
+        ...CARD_DATA.skills.map(c => ({...c, cat: 'skill'}))
       ];
 
-      const COLS = 3;
-      const ROWS = 3;
-      const cardsPerPage = COLS * ROWS;
+      // Group 2: Station Cards -> 2 copies each, 4 per page
+      const stationCards = [];
+      CARD_DATA.stations.forEach(c => {
+        stationCards.push({...c, cat: 'station'});
+        stationCards.push({...c, cat: 'station'});
+      });
+
       let html = '';
 
-      for (let i = 0; i < allCards.length; i += cardsPerPage) {
-        let pageCards = allCards.slice(i, i + cardsPerPage);
+      // ======== HELPER FUNCTION TO RENDER PAGES ========
+      function renderBatch(deck, cols, rows, cssSizeClass) {
+        let resultHTML = '';
+        const cardsPerPage = cols * rows;
+        for (let i = 0; i < deck.length; i += cardsPerPage) {
+          let pageCards = deck.slice(i, i + cardsPerPage);
+          while (pageCards.length < cardsPerPage) pageCards.push(null);
 
-        // Pad to fill the grid
-        while (pageCards.length < cardsPerPage) {
-          pageCards.push(null);
-        }
+          // FRONT PAGE
+          resultHTML += `<div class="print-page"><div class="${cssSizeClass}">`;
+          pageCards.forEach(card => {
+            if (!card) {
+              resultHTML += `<div class="card-wrapper ${cssSizeClass === 'card-grid-lg' ? 'card-wrapper-lg' : ''}"></div>`;
+              return;
+            }
 
-        // ===== FRONT PAGE =====
-        html += '<div class="print-page"><div class="card-grid">';
-        pageCards.forEach(card => {
-          if (!card) {
-            html += '<div class="card-wrapper"></div>';
-            return;
-          }
+            let color = card.color || '#555';
+            if (card.cat === 'station') color = '#10b981';
 
-          let color = card.color || '#555';
-          if (card.cat === 'station') color = '#10b981';
+            let rarityHTML = card.rarity ? `<div class="card-rarity">${'⭐'.repeat(card.rarity)}</div>` : '';
+            let effectHTML = (card.cat === 'skill' && card.description) ? 
+              `<div class="card-effect-bar"><div class="card-effect-text">${card.description}</div></div>` : '';
 
-          // Rarity stars for monsters
-          let rarityHTML = '';
-          if (card.rarity) {
-            rarityHTML = `<div class="card-rarity">${'⭐'.repeat(card.rarity)}</div>`;
-          }
+            // Title prefix handling
+            let titleText = card.name;
+            if (card.cat === 'station' && !card.emoji) {
+              titleText = `🏠 基地: ${card.name}`; 
+            } else if (card.emoji) {
+              titleText = `${card.emoji} ${card.name}`;
+            }
 
-          // Effect text only for skill cards
-          let effectHTML = '';
-          if (card.cat === 'skill' && card.description) {
-            effectHTML = `
-              <div class="card-effect-bar">
-                <div class="card-effect-text">${card.description}</div>
+            resultHTML += `
+              <div class="card-wrapper ${cssSizeClass === 'card-grid-lg' ? 'card-wrapper-lg' : ''}">
+                <div class="card" style="border-color: ${color}">
+                  ${rarityHTML}
+                  <div class="card-header">${titleText}</div>
+                  <div class="card-image-wrap">
+                    ${card.image ? `<img src="${card.image}" class="card-image" loading="lazy">` : ''}
+                    ${effectHTML}
+                  </div>
+                </div>
               </div>`;
+          });
+          resultHTML += '</div></div>';
+
+          // BACK PAGE (Mirrored for double-sided)
+          const mirroredCards = [];
+          for (let row = 0; row < rows; row++) {
+            for (let col = cols - 1; col >= 0; col--) {
+              mirroredCards.push(pageCards[row * cols + col]);
+            }
           }
 
-          html += `
-            <div class="card-wrapper">
-              <div class="card" style="border-color: ${color}">
-                ${rarityHTML}
-                <div class="card-header">${card.emoji || ''} ${card.name}</div>
-                <div class="card-image-wrap">
-                  ${card.image ? `<img src="${card.image}" class="card-image" loading="lazy">` : ''}
-                  ${effectHTML}
+          resultHTML += `<div class="print-page"><div class="${cssSizeClass}">`;
+          mirroredCards.forEach(card => {
+            if (!card) {
+              resultHTML += `<div class="card-wrapper ${cssSizeClass === 'card-grid-lg' ? 'card-wrapper-lg' : ''}"></div>`;
+              return;
+            }
+            resultHTML += `
+              <div class="card-wrapper ${cssSizeClass === 'card-grid-lg' ? 'card-wrapper-lg' : ''}">
+                <div class="card-back-design">
+                  <div class="mini-stars">
+                    <span class="mini-star ms1">✦</span><span class="mini-star ms2">✧</span>
+                    <span class="mini-star ms3">✦</span><span class="mini-star ms4">✧</span>
+                    <span class="mini-star ms5">✦</span><span class="mini-star ms6">✧</span>
+                    <span class="mini-star ms7">✦</span><span class="mini-star ms8">✧</span>
+                  </div>
+                  <div class="corner-deco corner-tl"></div><div class="corner-deco corner-tr"></div>
+                  <div class="corner-deco corner-bl"></div><div class="corner-deco corner-br"></div>
+                  <div class="star-glow"></div>
+                  <div class="star-center">
+                    <div class="star-main">★</div>
+                    <div class="star-sub">✦ M ★ C ✦</div>
+                  </div>
+                  <div class="back-title"><span>Monster Collector</span></div>
                 </div>
-              </div>
-            </div>`;
-        });
-        html += '</div></div>';
-
-        // ===== BACK PAGE (mirrored columns for duplex) =====
-        // When duplex printing (flip long edge), left-right is mirrored.
-        // Front row [A][B][C] → Back row must be [C][B][A] in HTML
-        const mirroredCards = [];
-        for (let row = 0; row < ROWS; row++) {
-          for (let col = COLS - 1; col >= 0; col--) {
-            mirroredCards.push(pageCards[row * COLS + col]);
-          }
+              </div>`;
+          });
+          resultHTML += '</div></div>';
         }
-
-        html += '<div class="print-page"><div class="card-grid">';
-        mirroredCards.forEach(card => {
-          if (!card) {
-            html += '<div class="card-wrapper"></div>';
-            return;
-          }
-          html += `
-            <div class="card-wrapper">
-              <div class="card-back-design">
-                <div class="mini-stars">
-                  <span class="mini-star ms1">✦</span>
-                  <span class="mini-star ms2">✧</span>
-                  <span class="mini-star ms3">✦</span>
-                  <span class="mini-star ms4">✧</span>
-                  <span class="mini-star ms5">✦</span>
-                  <span class="mini-star ms6">✧</span>
-                  <span class="mini-star ms7">✦</span>
-                  <span class="mini-star ms8">✧</span>
-                </div>
-                <div class="corner-deco corner-tl"></div>
-                <div class="corner-deco corner-tr"></div>
-                <div class="corner-deco corner-bl"></div>
-                <div class="corner-deco corner-br"></div>
-                <div class="star-glow"></div>
-                <div class="star-center">
-                  <div class="star-main">★</div>
-                  <div class="star-sub">✦ M ★ C ✦</div>
-                </div>
-                <div class="back-title"><span>Monster Collector</span></div>
-              </div>
-            </div>`;
-        });
-        html += '</div></div>';
+        return resultHTML;
       }
+
+      // Render Standard Cards (3x3 Grid)
+      html += renderBatch(standardCards, 3, 3, 'card-grid');
+
+      // Render Large Station Cards (2x2 Grid)
+      html += renderBatch(stationCards, 2, 2, 'card-grid-lg');
 
       container.innerHTML = html;
     });
