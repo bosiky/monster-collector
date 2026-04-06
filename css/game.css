@@ -2,6 +2,187 @@
    Monster Collector — Game Table Styles
    ============================================ */
 
+/* --- Lobby Page --- */
+.lobby-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+}
+
+.lobby-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.lobby-subtitle {
+  font-family: var(--font-chinese);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.lobby-modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.lobby-panel {
+  margin-top: var(--space-lg);
+  animation: fadeIn 0.3s ease;
+}
+
+.lobby-panel h2 {
+  font-family: var(--font-chinese);
+  font-size: 1.3rem;
+  margin-bottom: var(--space-lg);
+  color: var(--color-text);
+}
+
+.room-code-display {
+  background: rgba(0,0,0,0.4);
+  border: 2px solid rgba(139,92,246,0.4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin: var(--space-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.room-code-label {
+  font-family: var(--font-chinese);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.room-code {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #f59e0b;
+  text-shadow: 0 0 20px rgba(245,158,11,0.3);
+}
+
+.lobby-status {
+  font-family: var(--font-chinese);
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+  margin: var(--space-md) 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.lobby-players {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0;
+}
+
+.lobby-player-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.lobby-player-item .player-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lobby-player-item span:nth-child(2) {
+  flex: 1;
+  text-align: left;
+  font-family: var(--font-chinese);
+  font-size: 0.9rem;
+}
+
+.lobby-player-item.waiting {
+  opacity: 0.5;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  color: var(--color-text-dim);
+}
+
+.status-badge.ready {
+  background: rgba(34,197,94,0.2);
+  color: #22c55e;
+}
+
+.join-form {
+  text-align: left;
+  margin-bottom: var(--space-lg);
+}
+
+.join-form label {
+  display: block;
+  font-family: var(--font-chinese);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.join-form .input-field {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-sm);
+}
+
+/* Online waiting overlay */
+.online-waiting-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-modal);
+  color: var(--color-text);
+  font-family: var(--font-chinese);
+}
+
+.online-waiting-overlay .waiting-text {
+  font-size: 1.3rem;
+  margin-top: var(--space-md);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.online-waiting-overlay .waiting-icon {
+  font-size: 3rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
 /* --- Home Page --- */
 .page-home {
   min-height: 100vh;

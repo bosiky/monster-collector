@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -85,7 +85,10 @@
 
     <div class="home-actions">
       <button class="btn btn-gold btn-lg" id="btn-start-game">
-        <span>⚔️</span> 開始遊戲
+        <span>⚔️</span> 本地對戰
+      </button>
+      <button class="btn btn-lg" id="btn-online-game" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;font-size:1rem">
+        <span>🌐</span> 線上對戰
       </button>
       <button class="btn btn-primary" id="btn-to-gallery">
         <span>📖</span> 瀏覽卡牌圖鑑
@@ -121,6 +124,83 @@
       <div class="rule-item">
         <span class="rule-icon">🃏</span>
         <span>一開始沒有手牌，每回合抽 1 張，手牌上限 7 張</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- PAGE: Lobby (Online)             -->
+  <!-- ================================ -->
+  <div class="page" id="page-lobby">
+    <div class="lobby-container">
+      <h1 class="lobby-title">🌐 線上對戰</h1>
+      <p class="lobby-subtitle">透過房間碼與朋友連線！</p>
+
+      <!-- Mode Selection -->
+      <div class="lobby-modes" id="lobby-modes">
+        <button class="btn btn-gold btn-lg" id="btn-create-room">
+          <span>🏠</span> 建立房間
+        </button>
+        <button class="btn btn-primary btn-lg" id="btn-join-room">
+          <span>🔗</span> 加入房間
+        </button>
+        <button class="btn btn-outline" id="btn-lobby-back" data-page="home">
+          ← 返回首頁
+        </button>
+      </div>
+
+      <!-- Create Room Panel -->
+      <div class="lobby-panel hidden" id="panel-create">
+        <h2>建立房間</h2>
+        <div class="room-code-display">
+          <span class="room-code-label">房間碼</span>
+          <span class="room-code" id="room-code-display">------</span>
+          <button class="btn btn-sm btn-outline" id="btn-copy-code" title="複製房間碼">📋</button>
+        </div>
+        <div class="lobby-status" id="host-status">正在建立房間...</div>
+        <div class="lobby-players" id="lobby-players">
+          <div class="lobby-player-item">
+            <span class="player-dot" style="background:var(--color-player-1)"></span>
+            <span id="host-name-display">房主</span>
+            <span class="status-badge ready">✓ 就緒</span>
+          </div>
+          <div class="lobby-player-item waiting" id="slot-player-2">
+            <span class="player-dot" style="background:var(--color-player-2)"></span>
+            <span>等待玩家加入...</span>
+            <span class="status-badge">⏳</span>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-lg" id="btn-host-start" disabled>
+          🎮 開始遊戲
+        </button>
+        <button class="btn btn-outline btn-sm" id="btn-cancel-host">取消</button>
+      </div>
+
+      <!-- Join Room Panel -->
+      <div class="lobby-panel hidden" id="panel-join">
+        <h2>加入房間</h2>
+        <div class="join-form">
+          <label>輸入房間碼</label>
+          <input type="text" id="input-room-code" class="input-field room-code-input" placeholder="例如: ABC123" maxlength="6" autocomplete="off" style="text-transform:uppercase;text-align:center;font-size:1.5rem;letter-spacing:4px">
+          <label style="margin-top:12px">你的名稱</label>
+          <input type="text" id="input-join-name" class="input-field" value="玩家" maxlength="10">
+        </div>
+        <button class="btn btn-primary btn-lg" id="btn-do-join">
+          🔗 連線
+        </button>
+        <div class="lobby-status hidden" id="join-status">連線中...</div>
+        <button class="btn btn-outline btn-sm" id="btn-cancel-join">取消</button>
+      </div>
+
+      <!-- Connected (waiting for host to start) -->
+      <div class="lobby-panel hidden" id="panel-waiting">
+        <h2>✅ 已連線</h2>
+        <div class="room-code-display">
+          <span class="room-code-label">房間</span>
+          <span class="room-code" id="join-room-code">------</span>
+        </div>
+        <div class="lobby-players" id="join-lobby-players"></div>
+        <div class="lobby-status">等待房主開始遊戲...</div>
       </div>
     </div>
   </div>
@@ -290,10 +370,12 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/cards.js?v=4"></script>
-  <script src="js/animations.js?v=4"></script>
-  <script src="js/game.js?v=4"></script>
-  <script src="js/generator.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="js/cards.js?v=5"></script>
+  <script src="js/animations.js?v=5"></script>
+  <script src="js/game.js?v=5"></script>
+  <script src="js/network.js?v=5"></script>
+  <script src="js/generator.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

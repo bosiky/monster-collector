@@ -12,11 +12,14 @@ const App = {
   },
   logOpen: false,
   previousPlayer: -1,
+  gameMode: 'local',  // 'local' | 'online-host' | 'online-client'
+  network: null,
 
   init() {
     Generator.init();
     this.bindNavigation();
     this.bindHomeSettings();
+    this.bindLobby();
     this.initParticles();
     this.showPage('home');
   },
@@ -302,6 +305,8 @@ const App = {
   // Game Logic
   // ============================
   startGame() {
+    this.gameMode = 'local';
+
     // Collect player names from inputs
     for (let i = 1; i <= 3; i++) {
       const input = document.getElementById(`player-name-${i}`);
@@ -861,6 +866,579 @@ const App = {
     this.logOpen = !this.logOpen;
     const log = document.getElementById('game-log');
     log.classList.toggle('open', this.logOpen);
+  },
+
+  // ============================
+  // Lobby & Online Multiplayer
+  // ============================
+  bindLobby() {
+    // Online button on home page
+    const onlineBtn = document.getElementById('btn-online-game');
+    if (onlineBtn) {
+      onlineBtn.addEventListener('click', () => this.showPage('lobby'));
+    }
+
+    // Create Room
+    const createBtn = document.getElementById('btn-create-room');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => this.onCreateRoom());
+    }
+
+    // Join Room
+    const joinBtn = document.getElementById('btn-join-room');
+    if (joinBtn) {
+      joinBtn.addEventListener('click', () => {
+        document.getElementById('lobby-modes').classList.add('hidden');
+        document.getElementById('panel-join').classList.remove('hidden');
+      });
+    }
+
+    // Do Join
+    const doJoinBtn = document.getElementById('btn-do-join');
+    if (doJoinBtn) {
+      doJoinBtn.addEventListener('click', () => this.onJoinRoom());
+    }
+
+    // Host Start
+    const hostStartBtn = document.getElementById('btn-host-start');
+    if (hostStartBtn) {
+      hostStartBtn.addEventListener('click', () => this.onHostStartGame());
+    }
+
+    // Copy code
+    const copyBtn = document.getElementById('btn-copy-code');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const code = document.getElementById('room-code-display').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          copyBtn.textContent = '✓';
+          setTimeout(() => copyBtn.textContent = '📋', 1500);
+        });
+      });
+    }
+
+    // Cancel buttons
+    const cancelHost = document.getElementById('btn-cancel-host');
+    if (cancelHost) {
+      cancelHost.addEventListener('click', () => this.cancelOnline());
+    }
+    const cancelJoin = document.getElementById('btn-cancel-join');
+    if (cancelJoin) {
+      cancelJoin.addEventListener('click', () => this.cancelOnline());
+    }
+  },
+
+  cancelOnline() {
+    if (this.network) {
+      this.network.destroy();
+      this.network = null;
+    }
+    // Reset lobby panels
+    document.getElementById('lobby-modes').classList.remove('hidden');
+    document.getElementById('panel-create').classList.add('hidden');
+    document.getElementById('panel-join').classList.add('hidden');
+    document.getElementById('panel-waiting').classList.add('hidden');
+  },
+
+  async onCreateRoom() {
+    // Collect host name
+    const nameInput = document.getElementById('player-name-1');
+    const hostName = nameInput ? nameInput.value.trim() || '玩家1' : '玩家1';
+
+    // Show create panel
+    document.getElementById('lobby-modes').classList.add('hidden');
+    document.getElementById('panel-create').classList.remove('hidden');
+    document.getElementById('host-name-display').textContent = hostName;
+
+    // Create network
+    this.network = new NetworkManager();
+
+    this.network.onPlayerJoined = (info) => {
+      this.updateLobbyPlayers(info.playerNames);
+      document.getElementById('host-status').textContent = `${info.totalPlayers}/${this.settings.playerCount} 人已加入`;
+      if (info.totalPlayers >= this.settings.playerCount) {
+        document.getElementById('btn-host-start').disabled = false;
+      }
+    };
+
+    this.network.onPlayerLeft = (info) => {
+      document.getElementById('host-status').textContent = `${info.name} 已離開`;
+      document.getElementById('btn-host-start').disabled = true;
+    };
+
+    try {
+      const code = await this.network.createRoom(hostName, this.settings.playerCount);
+      document.getElementById('room-code-display').textContent = code;
+      document.getElementById('host-status').textContent = '等待玩家加入...';
+    } catch (err) {
+      document.getElementById('host-status').textContent = '建立失敗: ' + err.message;
+    }
+  },
+
+  updateLobbyPlayers(names) {
+    const colors = ['var(--color-player-1)', 'var(--color-player-2)', 'var(--color-player-3)'];
+    const container = document.getElementById('lobby-players');
+    container.innerHTML = names.map((name, i) => `
+      <div class="lobby-player-item">
+        <span class="player-dot" style="background:${colors[i]}"></span>
+        <span>${name}</span>
+        <span class="status-badge ready">✓ 就緒</span>
+      </div>
+    `).join('');
+
+    // Show waiting slots
+    for (let i = names.length; i < this.settings.playerCount; i++) {
+      container.innerHTML += `
+        <div class="lobby-player-item waiting">
+          <span class="player-dot" style="background:${colors[i]}"></span>
+          <span>等待玩家加入...</span>
+          <span class="status-badge">⏳</span>
+        </div>
+      `;
+    }
+  },
+
+  async onJoinRoom() {
+    const codeInput = document.getElementById('input-room-code');
+    const nameInput = document.getElementById('input-join-name');
+    const code = codeInput.value.trim().toUpperCase();
+    const name = nameInput.value.trim() || '玩家';
+
+    if (code.length < 4) {
+      alert('請輸入有效的房間碼');
+      return;
+    }
+
+    const statusEl = document.getElementById('join-status');
+    statusEl.classList.remove('hidden');
+    statusEl.textContent = '連線中...';
+
+    this.network = new NetworkManager();
+
+    this.network.onGameStarted = (data) => {
+      this.gameMode = 'online-client';
+      this.settings.playerCount = data.playerCount;
+      this.settings.targetCards = data.targetCards;
+      this.settings.playerNames = data.playerNames;
+      this.showPage('game');
+    };
+
+    this.network.onGameState = (state) => {
+      this.renderOnlineGameState(state);
+    };
+
+    this.network.onNeedTarget = (action, targets) => {
+      this.showTargetSelector(action, targets, (targetIdx) => {
+        this.network.sendAction('target-selected', { targetIndex: targetIdx });
+      });
+    };
+
+    this.network.onNeedStealChoice = (targetIdx, cards) => {
+      this.showStealChoice(targetIdx, cards, (cardIdx) => {
+        this.network.sendAction('steal-choice', { cardIndex: cardIdx });
+      });
+    };
+
+    this.network.onVictory = (playerIdx) => {
+      this.showVictoryScreen(playerIdx);
+    };
+
+    this.network.onLog = (entry) => {
+      this.renderLogEntry(entry);
+    };
+
+    this.network.onPlayerJoined = (info) => {
+      this.updateJoinLobbyPlayers(info.playerNames);
+    };
+
+    this.network.onError = (err) => {
+      alert(err.message);
+    };
+
+    this.network.onWaiting = (data) => {
+      this.showOnlineWaiting(data.message);
+    };
+
+    try {
+      const result = await this.network.joinRoom(code, name);
+      // Show waiting panel
+      document.getElementById('panel-join').classList.add('hidden');
+      document.getElementById('panel-waiting').classList.remove('hidden');
+      document.getElementById('join-room-code').textContent = code;
+      this.updateJoinLobbyPlayers(result.playerNames);
+    } catch (err) {
+      statusEl.textContent = err.message;
+    }
+  },
+
+  updateJoinLobbyPlayers(names) {
+    const colors = ['var(--color-player-1)', 'var(--color-player-2)', 'var(--color-player-3)'];
+    const container = document.getElementById('join-lobby-players');
+    if (!container) return;
+    container.innerHTML = names.map((name, i) => `
+      <div class="lobby-player-item">
+        <span class="player-dot" style="background:${colors[i]}"></span>
+        <span>${name}</span>
+        <span class="status-badge ready">✓</span>
+      </div>
+    `).join('');
+  },
+
+  onHostStartGame() {
+    this.gameMode = 'online-host';
+    this.settings.playerNames = [...this.network.playerNames];
+
+    // Notify clients the game is starting
+    this.network.broadcast({
+      type: 'game-start',
+      playerCount: this.settings.playerCount,
+      targetCards: this.settings.targetCards,
+      playerNames: this.settings.playerNames
+    });
+
+    // Create game engine on host
+    this.previousPlayer = -1;
+    this.game = new MonsterCollectorGame({
+      playerCount: this.settings.playerCount,
+      targetCards: this.settings.targetCards,
+      playerNames: this.settings.playerNames,
+      onStateChange: (state) => this.onOnlineHostStateChange(state),
+      onGameLog: (entry) => {
+        this.renderLogEntry(entry);
+        this.network.broadcast({ type: 'log', entry });
+      },
+      onVictory: (playerIdx) => {
+        this.showVictoryScreen(playerIdx);
+        this.network.broadcast({ type: 'victory', playerIndex: playerIdx });
+      },
+      onNeedTarget: (action, targets, callback) => {
+        const cp = this.game.state.currentPlayer;
+        if (cp === 0) {
+          // Host is current player
+          this.showTargetSelector(action, targets, callback);
+        } else {
+          // Remote player needs to choose
+          this._pendingTargetCallback = callback;
+          const targetInfo = targets.map(t => ({ index: t.index, name: t.name }));
+          this.network.sendToClient(cp, {
+            type: 'need-target',
+            action,
+            targets: targetInfo
+          });
+        }
+      },
+      onNeedStealChoice: (targetIdx, cards, callback) => {
+        const cp = this.game.state.currentPlayer;
+        if (cp === 0) {
+          this.showStealChoice(targetIdx, cards, callback);
+        } else {
+          this._pendingStealCallback = callback;
+          this.network.sendToClient(cp, {
+            type: 'need-steal-choice',
+            targetIndex: targetIdx,
+            cards: cards.map(c => ({ uid: c.uid, name: c.name, emoji: c.emoji }))
+          });
+        }
+      }
+    });
+
+    // Listen for client actions
+    this.network.onAction = (data) => {
+      this.handleClientAction(data);
+    };
+
+    this.showPage('game');
+    // Emit initial state
+    this.onOnlineHostStateChange(this.game.state);
+  },
+
+  onOnlineHostStateChange(state) {
+    if (!state) return;
+    // Render for host (player 0)
+    this.renderOnlineGameState(
+      this.network._sanitizeStateForPlayer(state, 0)
+    );
+    // Broadcast to clients
+    this.network.broadcastState(state);
+
+    // Notify non-current players they're waiting
+    const cp = state.currentPlayer;
+    this.network.connections.forEach(conn => {
+      if (conn.playerIndex !== cp) {
+        conn.send({ type: 'waiting', message: `等待 ${state.players[cp].name} 操作中...` });
+      }
+    });
+    // Show/hide waiting overlay for host
+    if (cp !== 0 && !state.gameOver) {
+      this.showOnlineWaiting(`等待 ${state.players[cp].name} 操作中...`);
+    } else {
+      this.hideOnlineWaiting();
+    }
+  },
+
+  handleClientAction(data) {
+    if (!this.game) return;
+    const { playerIndex, action, payload } = data;
+
+    // Only allow actions from current player
+    if (playerIndex !== this.game.state.currentPlayer) return;
+
+    switch (action) {
+      case 'draw':
+        const card = this.game.drawCard();
+        if (card) {
+          // Send toast info to that player
+          this.network.sendToClient(playerIndex, {
+            type: 'game-state',
+            state: this.network._sanitizeStateForPlayer(this.game.state, playerIndex),
+            drawnCard: { name: card.name, emoji: card.emoji, type: card.type }
+          });
+        }
+        break;
+      case 'place':
+        this.game.placeMonster(payload.cardUid);
+        break;
+      case 'skill':
+        this.game.useSkill(payload.cardUid);
+        break;
+      case 'skip':
+        this.game.skipAction();
+        break;
+      case 'discard':
+        this.game.discardCard(payload.cardUid);
+        break;
+      case 'target-selected':
+        if (this._pendingTargetCallback) {
+          this._pendingTargetCallback(payload.targetIndex);
+          this._pendingTargetCallback = null;
+        }
+        break;
+      case 'steal-choice':
+        if (this._pendingStealCallback) {
+          this._pendingStealCallback(payload.cardIndex);
+          this._pendingStealCallback = null;
+        }
+        break;
+    }
+  },
+
+  renderOnlineGameState(state) {
+    const myIndex = state.myIndex !== undefined ? state.myIndex : 0;
+    const isMyTurn = state.currentPlayer === myIndex;
+
+    // Update header
+    const turnIndicator = document.getElementById('turn-indicator');
+    const playerColors = ['var(--color-player-1)', 'var(--color-player-2)', 'var(--color-player-3)'];
+    const currentName = state.players[state.currentPlayer].name;
+    turnIndicator.innerHTML = `
+      <span class="player-dot" style="background:${playerColors[state.currentPlayer]}"></span>
+      <span>${currentName} 的回合</span>
+      <span style="font-size:0.8rem;color:var(--color-text-dim);margin-left:8px">第 ${state.turnNumber} 回合</span>
+    `;
+
+    // Phase indicator
+    this.renderPhaseIndicator(isMyTurn ? state.phase : 'waiting');
+
+    // Opponents (everyone except me)
+    const opponentsArea = document.getElementById('opponents-area');
+    opponentsArea.innerHTML = '';
+    state.players.forEach((player, idx) => {
+      if (idx === myIndex) return;
+      const panel = document.createElement('div');
+      panel.className = 'opponent-panel';
+      const handCount = typeof player.hand === 'object' && player.hand.length !== undefined
+        ? player.hand.length
+        : (player.hand && player.hand.length) || 0;
+      panel.innerHTML = `
+        <div class="opponent-header">
+          <div class="player-name">
+            <span class="player-icon" style="background:${playerColors[idx]}">${player.name[0]}</span>
+            ${player.name}
+            ${player.hasShield ? '<span class="shield-indicator" style="position:static">🛡️</span>' : ''}
+            ${idx === state.currentPlayer ? '<span style="color:#f59e0b;font-size:0.75rem">◀ 操作中</span>' : ''}
+          </div>
+          <div class="hand-count">🃏 ${handCount}</div>
+        </div>
+        <div class="opponent-collection">
+          ${(player.collection || []).map(c => `
+            <div class="collection-slot filled" style="width:50px;height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.6rem;background:rgba(107,33,168,0.2)">
+              <span style="font-size:1.2rem">${c.emoji}</span>
+              <span style="font-family:var(--font-chinese);color:var(--color-text-muted)">${c.name}</span>
+            </div>
+          `).join('')}
+          ${Array(Math.max(0, this.settings.targetCards - (player.collection || []).length)).fill(0).map((_, i) => `
+            <div class="collection-slot" style="width:50px;height:70px">
+              <span class="slot-number">${(player.collection || []).length + i + 1}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="font-size:0.75rem;color:var(--color-text-dim);font-family:var(--font-chinese)">
+          収集進度: ${(player.collection || []).length}/${this.settings.targetCards}
+        </div>
+      `;
+      opponentsArea.appendChild(panel);
+    });
+
+    // My station
+    const myPlayer = state.players[myIndex];
+    const stationName = document.getElementById('player-station-name');
+    stationName.innerHTML = `<span style="color:${playerColors[myIndex]}">●</span> ${myPlayer.name} 的収集站`;
+    document.getElementById('player-station-progress').textContent = `${myPlayer.collection.length} / ${this.settings.targetCards}`;
+
+    const stationSlots = document.getElementById('player-station-slots');
+    stationSlots.innerHTML = '';
+    for (let i = 0; i < this.settings.targetCards; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'collection-slot' + (i < myPlayer.collection.length ? ' filled' : '');
+      if (i < myPlayer.collection.length) {
+        const c = myPlayer.collection[i];
+        slot.innerHTML = `<span style="font-size:1.2rem">${c.emoji}</span><span style="font-size:0.5rem;font-family:var(--font-chinese)">${c.name}</span>`;
+        slot.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(107,33,168,0.2)';
+      } else {
+        slot.innerHTML = `<span class="slot-number">${i + 1}</span>`;
+      }
+      stationSlots.appendChild(slot);
+    }
+
+    // Deck
+    const deckContainer = document.getElementById('deck-container');
+    deckContainer.innerHTML = '';
+    const deckCount = state.deck.count !== undefined ? state.deck.count : state.deck.length;
+    const deckStack = renderCardStack(deckCount);
+    deckContainer.appendChild(deckStack);
+    document.getElementById('deck-count').textContent = deckCount;
+
+    // Make deck clickable only if it's my turn and draw phase
+    if (isMyTurn && state.phase === 'draw') {
+      deckContainer.style.cursor = 'pointer';
+      deckContainer.classList.add('animate-pulse-glow');
+      deckContainer.onclick = () => {
+        deckContainer.classList.remove('animate-pulse-glow');
+        deckContainer.onclick = null;
+        if (this.gameMode === 'online-host') {
+          const drawnCard = this.game.drawCard();
+          if (drawnCard) this.showDrawnCardToast(drawnCard);
+        } else {
+          this.network.sendAction('draw');
+        }
+      };
+    } else {
+      deckContainer.style.cursor = 'default';
+      deckContainer.classList.remove('animate-pulse-glow');
+      deckContainer.onclick = null;
+    }
+
+    // Discard
+    const discardContainer = document.getElementById('discard-container');
+    discardContainer.innerHTML = '';
+    if (state.discardPile && state.discardPile.length > 0) {
+      const topDiscard = state.discardPile[state.discardPile.length - 1];
+      const discardStack = renderCardStack(state.discardPile.length, topDiscard);
+      discardContainer.appendChild(discardStack);
+    } else {
+      discardContainer.innerHTML = '<div class="empty-discard">棄牌堆</div>';
+    }
+
+    // My hand
+    const myHand = Array.isArray(myPlayer.hand) ? myPlayer.hand : [];
+    document.getElementById('hand-count').textContent = `手牌: ${myHand.length}`;
+    const handContainer = document.getElementById('player-hand');
+    handContainer.innerHTML = '';
+    myHand.forEach(card => {
+      const cardEl = renderCard(card, { clickable: isMyTurn });
+      if (isMyTurn) {
+        cardEl.addEventListener('click', () => this.onOnlineCardClick(card, state));
+      }
+      handContainer.appendChild(cardEl);
+    });
+
+    // Action prompt
+    const prompt = document.getElementById('action-prompt');
+    if (!isMyTurn) {
+      prompt.innerHTML = `
+        <div class="prompt-title" style="color:var(--color-text-dim)">⏳ 等待對手</div>
+        <div style="font-family:var(--font-chinese);font-size:0.85rem;color:var(--color-text-dim)">
+          ${currentName} 正在操作中...
+        </div>
+      `;
+    } else if (state.phase === 'draw') {
+      prompt.innerHTML = `
+        <div class="prompt-title">🎯 抽牌階段</div>
+        <div style="font-family:var(--font-chinese);font-size:0.85rem">點擊抽牌堆抽取 1 張牌</div>
+      `;
+    } else if (state.phase === 'action') {
+      prompt.innerHTML = `
+        <div class="prompt-title">⚔️ 行動階段</div>
+        <div style="font-family:var(--font-chinese);font-size:0.85rem">點擊手牌使用，或跳過</div>
+        <button class="btn btn-outline btn-sm" onclick="App.onOnlineSkip()" style="margin-top:8px">跳過行動</button>
+      `;
+    } else if (state.phase === 'discard') {
+      prompt.innerHTML = `
+        <div class="prompt-title">🗑️ 棄牌階段</div>
+        <div style="font-family:var(--font-chinese);font-size:0.85rem">手牌超過 7 張，請點擊手牌棄掉</div>
+      `;
+    }
+
+    // Handle waiting overlay
+    if (!isMyTurn && !state.gameOver) {
+      this.showOnlineWaiting(`等待 ${currentName} 操作中...`);
+    } else {
+      this.hideOnlineWaiting();
+    }
+  },
+
+  onOnlineCardClick(card, state) {
+    if (state.phase === 'action') {
+      if (card.type === 'monster') {
+        if (this.gameMode === 'online-host') {
+          this.game.placeMonster(card.uid);
+        } else {
+          this.network.sendAction('place', { cardUid: card.uid });
+        }
+      } else if (card.type === 'skill') {
+        if (this.gameMode === 'online-host') {
+          this.game.useSkill(card.uid);
+        } else {
+          this.network.sendAction('skill', { cardUid: card.uid });
+        }
+      }
+    } else if (state.phase === 'discard') {
+      if (this.gameMode === 'online-host') {
+        this.game.discardCard(card.uid);
+      } else {
+        this.network.sendAction('discard', { cardUid: card.uid });
+      }
+    }
+  },
+
+  onOnlineSkip() {
+    if (this.gameMode === 'online-host') {
+      this.game.skipAction();
+    } else {
+      this.network.sendAction('skip');
+    }
+  },
+
+  showOnlineWaiting(message) {
+    let overlay = document.getElementById('online-waiting');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'online-waiting';
+      overlay.className = 'online-waiting-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div class="waiting-icon">⏳</div>
+      <div class="waiting-text">${message}</div>
+    `;
+    overlay.style.display = 'flex';
+  },
+
+  hideOnlineWaiting() {
+    const overlay = document.getElementById('online-waiting');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
   }
 };
 
