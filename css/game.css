@@ -589,14 +589,9 @@
   opacity: 0.6;
 }
 
-/* Center Area */
+/* Center Area (Hidden in new rules) */
 .center-area {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-3xl);
-  flex: 1;
-  min-height: 200px;
+  display: none;
 }
 
 .deck-zone {
@@ -679,14 +674,15 @@
 /* Player Collection Station */
 .player-station {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
   background: linear-gradient(135deg, rgba(22,101,52,0.15), rgba(16,185,129,0.08));
   border-radius: var(--radius-lg);
   border: 1px solid rgba(22,101,52,0.3);
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
   transition: border-color 0.3s ease;
 }
 
@@ -722,15 +718,16 @@
 }
 
 .station-info {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .station-type {
   font-family: var(--font-chinese);
   font-size: 0.7rem;
   color: rgba(16,185,129,0.7);
-  margin-top: 2px;
+  margin-top: 4px;
   letter-spacing: 1px;
 }
 
@@ -757,9 +754,10 @@
 
 .station-slots {
   display: flex;
+  flex: 1;
   gap: 6px;
-  flex-wrap: wrap;
-  padding-top: var(--space-xs);
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .station-slots .collection-slot {
@@ -1310,3 +1308,28 @@
   .generator-container { grid-template-columns: 1fr; }
   .game-log { width: 100%; }
 }
+
+/* Additional UI for Shield */
+.station-shield-zone {
+  width: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: var(--space-md);
+  border-left: 1px dashed rgba(16,185,129,0.3);
+  flex-shrink: 0;
+}
+
+.station-shield-zone .card {
+  width: 100px;
+  height: 140px;
+  box-shadow: 0 0 20px rgba(59,130,246,0.6);
+  border-color: #3b82f6 !important;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Player Hand (Hidden) */
+.player-hand {
+  display: none !important;
+}
+#hand-count { display: none !important; }

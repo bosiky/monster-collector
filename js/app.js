@@ -526,24 +526,8 @@ const App = {
   },
 
   renderPhaseIndicator(phase) {
-    const phases = [
-      { id: 'draw', label: '① 抽牌' },
-      { id: 'action', label: '② 行動' },
-      { id: 'discard', label: '③ 結束' }
-    ];
-
     const container = document.getElementById('phase-indicator');
-    container.innerHTML = phases.map(p => {
-      const isActive = p.id === phase;
-      const isDone = phases.findIndex(x => x.id === phase) > phases.findIndex(x => x.id === p.id);
-      const cls = isActive ? 'active' : isDone ? 'completed' : '';
-      return `
-        <div class="phase-step ${cls}">
-          <span class="step-dot"></span>
-          ${p.label}
-        </div>
-      `;
-    }).join('');
+    if(container) container.style.display = 'none';
   },
 
   renderOpponents(state) {
@@ -703,113 +687,94 @@ const App = {
       slot.innerHTML = `<span class="slot-number">${player.collection.length + i + 1}</span>`;
       container.appendChild(slot);
     }
+
+    // Render Shield
+    const shieldContainer = document.getElementById('player-station-shield');
+    shieldContainer.innerHTML = '';
+    if (player.hasShield && player._shieldCard) {
+      shieldContainer.className = 'station-shield-zone';
+      const shieldEl = renderCard(player._shieldCard);
+      shieldEl.style.setProperty('--card-width', '100px');
+      shieldEl.style.setProperty('--card-height', '140px');
+      shieldEl.querySelector('.card-name').style.fontSize = '0.7rem';
+      if(shieldEl.querySelector('.card-effect')) shieldEl.querySelector('.card-effect').style.display = 'none';
+      if(shieldEl.querySelector('.card-subtitle')) shieldEl.querySelector('.card-subtitle').style.display = 'none';
+      shieldContainer.appendChild(shieldEl);
+    } else {
+      shieldContainer.className = '';
+    }
   },
 
   renderPlayerHand(state) {
-    const player = state.players[state.currentPlayer];
+    // Hand is removed in new rules
     const container = document.getElementById('player-hand');
-    container.innerHTML = '';
-
-    player.hand.forEach((cardData, index) => {
-      const cardEl = renderCard(cardData);
-
-      // Highlight playable cards based on phase
-      if (state.phase === 'action' && cardData.type === 'skill') {
-        cardEl.classList.add('card-glow');
-        cardEl.addEventListener('click', () => this.handleCardClick(cardData));
-      } else if (state.phase === 'discard' && player.hand.length > this.settings.maxHand) {
-        cardEl.classList.add('card-glow');
-        cardEl.addEventListener('click', () => {
-          this.game.discardCard(cardData.uid);
-        });
-      } else {
-        cardEl.style.cursor = 'default';
-      }
-
-      Animations.dealCard(cardEl, index);
-      container.appendChild(cardEl);
-    });
-
-    document.getElementById('hand-count').textContent = `手牌: ${player.hand.length}`;
+    if(container) container.innerHTML = '';
   },
 
   handleCardClick(cardData) {
-    if (this.game.state.phase !== 'action') return;
-
-    // Only skill cards need manual action (monsters auto-place on draw)
-    if (cardData.type === 'skill') {
-      const isShield = cardData.effect === 'shield';
-      const desc = isShield
-        ? `掛上 ${cardData.emoji} ${cardData.name} 保護收集站？`
-        : `使用 ${cardData.emoji} ${cardData.name}？<br><span style="font-size:0.9rem;color:var(--color-text-muted)">${cardData.description}</span>`;
-      this.showConfirmDialog(desc, () => this.game.useSkill(cardData.uid));
-    }
+    // Hidden / unused
   },
 
   animateMonsterAutoPlace(card, result) {
-    let msg, color;
     if (result === 'lucky') {
-      msg = `⭐🌟 ${card.emoji} ${card.name} 飛入收集站！幸運星降臨！`;
-      color = 'linear-gradient(135deg, #f59e0b, #ef4444)';
-    } else if (result === 'placed') {
-      msg = `${card.emoji} ${card.name} 飛入收集站！`;
-      color = '#10b981';
-    } else {
-      msg = `${card.emoji} ${card.name} 已重複，回到牌堆`;
-      color = '#f59e0b';
+      // Find the last slot that was just filled visually
+      setTimeout(() => {
+        const slots = document.querySelectorAll('#player-station-slots .collection-slot.filled');
+        if (slots.length > 0) {
+          const targetSlot = slots[slots.length - 1];
+          // Create star animation element
+          const star = document.createElement('div');
+          star.innerHTML = '⭐';
+          star.style.cssText = `position:absolute;font-size:3rem;text-shadow:0 0 20px #f59e0b;z-index:100;animation:fly-in-spin 1.5s ease-out forwards;pointer-events:none;`;
+          targetSlot.appendChild(star);
+          
+          const text = document.createElement('div');
+          text.innerHTML = '幸運星！';
+          text.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);font-family:var(--font-chinese);font-weight:bold;color:#f59e0b;text-shadow:0 0 10px #fff;white-space:nowrap;animation:fadeInOut 2s ease forwards;pointer-events:none;z-index:101;`;
+          targetSlot.appendChild(text);
+
+          setTimeout(() => {
+            if(star) star.remove();
+            if(text) text.remove();
+          }, 2500);
+        }
+      }, 300);
+    } else if (result === 'duplicate') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#fff;padding:10px 24px;border-radius:12px;font-family:var(--font-chinese);font-size:0.95rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;pointer-events:none;white-space:nowrap`;
+      toast.textContent = `${card.emoji} ${card.name} 已重複，洗回牌堆`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+      }, 2000);
     }
-    
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 24px;border-radius:12px;font-family:var(--font-chinese);font-size:0.95rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;pointer-events:none;white-space:nowrap`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.style.transition = 'opacity 0.5s';
-      toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 500);
-    }, result === 'lucky' ? 3000 : 2000);
   },
 
   renderActionPrompt(state) {
     const container = document.getElementById('action-prompt');
 
     if (state.phase === 'draw') {
+      let extra = state.maxDrawsThisTurn > 1 && state.drawsThisTurn > 0 
+        ? `<div style="color:var(--color-accent-gold);margin-top:8px;font-weight:bold">⭐ 幸運星加成：第 ${state.drawsThisTurn + 1} 次抽牌！</div>` 
+        : '';
       container.innerHTML = `
         <div class="prompt-title">🎯 抽牌階段</div>
         <div style="font-family:var(--font-chinese);font-size:0.85rem;color:var(--color-text-muted)">
-          點擊抽牌堆抽取 1 張牌
+          點擊抽牌堆抽取卡牌
+          ${extra}
         </div>
       `;
-    } else if (state.phase === 'action') {
-      const hasSkills = state.players[state.currentPlayer].hand.some(c => c.type === 'skill');
-      container.innerHTML = `
-        <div class="prompt-title">⚔️ 行動階段</div>
-        <div class="prompt-actions">
-          <div style="font-family:var(--font-chinese);font-size:0.8rem;color:var(--color-text-muted);text-align:center;margin-bottom:4px">
-            ${hasSkills ? '點擊技能卡使用，或跳過' : '沒有可使用的技能卡'}
-          </div>
-          <button class="btn btn-sm btn-outline" id="btn-skip-action">跳過行動</button>
-        </div>
-      `;
-      document.getElementById('btn-skip-action').addEventListener('click', () => {
-        this.game.skipAction();
-      });
-    } else if (state.phase === 'discard') {
-      const excess = state.players[state.currentPlayer].hand.length - this.settings.maxHand;
-      if (excess > 0) {
-        container.innerHTML = `
-          <div class="prompt-title">🗑️ 棄牌階段</div>
-          <div style="font-family:var(--font-chinese);font-size:0.85rem;color:var(--color-text-muted)">
-            需棄掉 ${excess} 張牌<br>點擊手牌選擇棄掉
-          </div>
-        `;
-      } else {
-        container.innerHTML = '';
-      }
     } else if (state.phase === 'waiting') {
       container.innerHTML = `
-        <div class="prompt-title">⏳ 等待選擇...</div>
+        <div class="prompt-title">⚔️ 目標選擇</div>
+        <div style="font-family:var(--font-chinese);font-size:0.85rem;color:var(--color-text-muted)">
+          請在畫面上方選擇攻擊目標！
+        </div>
       `;
+    } else {
+      container.innerHTML = ``;
     }
   },
 
