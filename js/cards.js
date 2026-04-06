@@ -2,6 +2,28 @@
    Monster Collector — Card Definitions & Rendering
    ============================================ */
 
+// Card art style: 'original' or 'handdrawn'
+let currentCardStyle = localStorage.getItem('cardStyle') || 'original';
+
+function setCardStyle(style) {
+  currentCardStyle = style;
+  localStorage.setItem('cardStyle', style);
+}
+
+function getCardStyle() {
+  return currentCardStyle;
+}
+
+/**
+ * Get the correct image path based on current card style
+ */
+function getCardImage(cardData) {
+  if (currentCardStyle === 'handdrawn' && cardData.handdrawnImage) {
+    return cardData.handdrawnImage;
+  }
+  return cardData.image;
+}
+
 const CARD_DATA = {
   monsters: [
     {
@@ -11,6 +33,7 @@ const CARD_DATA = {
       emoji: '👁️',
       rarity: 3,
       image: 'assets/monsters/seek.png',
+      handdrawnImage: 'assets/handdrawn/monsters/seek.png',
       color: '#8b5cf6',
       description: '在黑暗中潛行的獨眼追蹤者'
     },
@@ -21,6 +44,7 @@ const CARD_DATA = {
       emoji: '😊',
       rarity: 1,
       image: 'assets/monsters/job.png',
+      handdrawnImage: 'assets/handdrawn/monsters/job.png',
       color: '#f59e0b',
       description: '看似友善的方頭小傢伙'
     },
@@ -31,6 +55,7 @@ const CARD_DATA = {
       emoji: '🌙',
       rarity: 3,
       image: 'assets/monsters/dark-moon.png',
+      handdrawnImage: 'assets/handdrawn/monsters/dark-moon.png',
       color: '#6366f1',
       description: '邪惡微笑的暗夜月亮'
     },
@@ -41,6 +66,7 @@ const CARD_DATA = {
       emoji: '👺',
       rarity: 2,
       image: 'assets/monsters/ambush.png',
+      handdrawnImage: 'assets/handdrawn/monsters/ambush.png',
       color: '#ef4444',
       description: '突然出現的恐怖面具獵手'
     },
@@ -51,6 +77,7 @@ const CARD_DATA = {
       emoji: '🏃',
       rarity: 1,
       image: 'assets/monsters/stickman.png',
+      handdrawnImage: 'assets/handdrawn/monsters/stickman.png',
       color: '#22c55e',
       description: '簡單卻神秘的線條生命體'
     },
@@ -61,6 +88,7 @@ const CARD_DATA = {
       emoji: '🔢',
       rarity: 2,
       image: 'assets/monsters/67.png',
+      handdrawnImage: 'assets/handdrawn/monsters/67.png',
       color: '#ec4899',
       description: '由數字構成的扭曲實體'
     },
@@ -71,6 +99,7 @@ const CARD_DATA = {
       emoji: '💨',
       rarity: 2,
       image: 'assets/monsters/rush.png',
+      handdrawnImage: 'assets/handdrawn/monsters/rush.png',
       color: '#f97316',
       description: '高速衝刺的狂暴小怪物'
     },
@@ -81,6 +110,7 @@ const CARD_DATA = {
       emoji: '🐂',
       rarity: 2,
       image: 'assets/monsters/ou-niu.png',
+      handdrawnImage: 'assets/handdrawn/monsters/ou-niu.png',
       color: '#7c3aed',
       description: '蠻力無窮的神話鬥牛'
     },
@@ -91,6 +121,7 @@ const CARD_DATA = {
       emoji: '👀',
       rarity: 1,
       image: 'assets/monsters/big-eye.png',
+      handdrawnImage: 'assets/handdrawn/monsters/big-eye.png',
       color: '#14b8a6',
       description: '一隻巨大眼球的植物型怪物'
     },
@@ -101,6 +132,7 @@ const CARD_DATA = {
       emoji: '🍄',
       rarity: 2,
       image: 'assets/monsters/mushroom.png',
+      handdrawnImage: 'assets/handdrawn/monsters/mushroom.png',
       color: '#a3e635',
       description: '散發靈感孢子的神秘蘑菇'
     },
@@ -111,6 +143,7 @@ const CARD_DATA = {
       emoji: '🤖',
       rarity: 1,
       image: 'assets/monsters/block-boy.png',
+      handdrawnImage: 'assets/handdrawn/monsters/block-boy.png',
       color: '#06b6d4',
       description: '方方正正的可愛像素人'
     },
@@ -121,6 +154,7 @@ const CARD_DATA = {
       emoji: '🐛',
       rarity: 1,
       image: 'assets/monsters/s-worm.png',
+      handdrawnImage: 'assets/handdrawn/monsters/s-worm.png',
       color: '#84cc16',
       description: 'S形身體的地底蠕動怪物'
     }
@@ -133,6 +167,7 @@ const CARD_DATA = {
       emoji: '🦹',
       color: '#a855f7',
       image: 'assets/skills/thief.png',
+      handdrawnImage: 'assets/handdrawn/skills/thief.png',
       description: '從對手的收集站偷走1張怪物卡至你的手牌',
       effect: 'steal'
     },
@@ -143,6 +178,7 @@ const CARD_DATA = {
       emoji: '🛡️',
       color: '#3b82f6',
       image: 'assets/skills/defense-shield.png',
+      handdrawnImage: 'assets/handdrawn/skills/shield.png',
       description: '保護收集站，下次被搶奪/炸彈時無效化',
       effect: 'shield'
     },
@@ -153,6 +189,7 @@ const CARD_DATA = {
       emoji: '💣',
       color: '#f97316',
       image: 'assets/skills/tnt-1.png',
+      handdrawnImage: 'assets/handdrawn/skills/tnt.png',
       description: '依炸彈數量炸毀1張怪物卡',
       effect: 'bomb',
       bombPower: 1
@@ -164,6 +201,7 @@ const CARD_DATA = {
       emoji: '💥',
       color: '#ef4444',
       image: 'assets/skills/tnt-3.png',
+      handdrawnImage: 'assets/handdrawn/skills/tnt.png',
       description: '依炸彈數量炸毀3張怪物卡',
       effect: 'bomb',
       bombPower: 3
@@ -175,6 +213,7 @@ const CARD_DATA = {
       emoji: '🔥',
       color: '#dc2626',
       image: 'assets/skills/tnt-5.png',
+      handdrawnImage: 'assets/handdrawn/skills/tnt.png',
       description: '依炸彈數量炸毀5張怪物卡',
       effect: 'bomb',
       bombPower: 5
@@ -186,15 +225,16 @@ const CARD_DATA = {
       emoji: '🥶',
       color: '#0ea5e9',
       image: 'assets/skills/freezer.png',
+      handdrawnImage: 'assets/handdrawn/skills/freezer.png',
       description: '下一回合不能抽卡一次',
       effect: 'freeze'
     }
   ],
   stations: [
-    { id: 'station-1', name: '狗狗UFO', image: 'assets/stations/station-1.png' },
-    { id: 'station-2', name: '貓貓UFO', image: 'assets/stations/station-2.png' },
-    { id: 'station-3', name: '狗狗巴士', image: 'assets/stations/station-3.png' },
-    { id: 'station-4', name: '貓貓巴士', image: 'assets/stations/station-4.png' }
+    { id: 'station-1', name: '狗狗UFO', image: 'assets/stations/station-1.png', handdrawnImage: 'assets/handdrawn/stations/station-1.png' },
+    { id: 'station-2', name: '貓貓UFO', image: 'assets/stations/station-2.png', handdrawnImage: 'assets/handdrawn/stations/station-2.png' },
+    { id: 'station-3', name: '狗狗巴士', image: 'assets/stations/station-3.png', handdrawnImage: 'assets/handdrawn/stations/station-3.png' },
+    { id: 'station-4', name: '貓貓巴士', image: 'assets/stations/station-4.png', handdrawnImage: 'assets/handdrawn/stations/station-4.png' }
   ]
 };
 
@@ -306,9 +346,10 @@ function renderCard(cardData, options = {}) {
   const imageContainer = document.createElement('div');
   imageContainer.className = 'card-image';
 
-  if (showImage && cardData.image) {
+  const cardImageSrc = getCardImage(cardData);
+  if (showImage && cardImageSrc) {
     const img = document.createElement('img');
-    img.src = cardData.image;
+    img.src = cardImageSrc;
     img.alt = cardData.name;
     img.loading = 'lazy';
     img.onerror = () => {
@@ -489,3 +530,7 @@ window.shuffleDeck = shuffleDeck;
 window.renderCard = renderCard;
 window.renderStationCard = renderStationCard;
 window.renderCardStack = renderCardStack;
+window.setCardStyle = setCardStyle;
+window.getCardStyle = getCardStyle;
+window.getCardImage = getCardImage;
+window.currentCardStyle = currentCardStyle;

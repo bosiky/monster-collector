@@ -384,6 +384,35 @@
   color: white;
 }
 
+/* Card Style Toggle Button */
+.btn-card-style-toggle {
+  margin-left: auto;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid rgba(245,158,11,0.4);
+  background: rgba(245,158,11,0.1);
+  color: var(--color-accent-gold);
+  font-family: var(--font-chinese);
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-card-style-toggle:hover {
+  background: rgba(245,158,11,0.25);
+  border-color: var(--color-accent-gold);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(245,158,11,0.3);
+}
+
+.btn-card-style-toggle.handdrawn-active {
+  border-color: rgba(168,85,247,0.5);
+  background: rgba(168,85,247,0.15);
+  color: var(--color-primary-light);
+  box-shadow: 0 0 8px rgba(168,85,247,0.3);
+}
+
 /* --- Gallery Page --- */
 .page-gallery {
   padding-top: 60px;

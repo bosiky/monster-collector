@@ -23,6 +23,7 @@ const App = {
     this.bindLobby();
     this.initParticles();
     this.autoRandomizeNames();
+    this.initCardStyleToggle();
     this.showPage('home');
   },
 
@@ -196,6 +197,48 @@ const App = {
   },
 
   // ============================
+  // Card Style Toggle
+  // ============================
+  initCardStyleToggle() {
+    const toggleBtn = document.getElementById('btn-card-style-toggle');
+    if (!toggleBtn) return;
+
+    // Set initial state
+    this.updateCardStyleButton(toggleBtn);
+
+    toggleBtn.addEventListener('click', () => {
+      const current = getCardStyle();
+      const newStyle = current === 'original' ? 'handdrawn' : 'original';
+      setCardStyle(newStyle);
+      this.updateCardStyleButton(toggleBtn);
+
+      // Re-render gallery if on gallery page
+      if (this.currentPage === 'gallery') {
+        this.galleryInitialized = false;
+        this.initGallery();
+      }
+
+      // Re-render game state if in game
+      if (this.game && this.currentPage === 'game') {
+        this.renderGameState(this.game.getState());
+      }
+    });
+  },
+
+  updateCardStyleButton(btn) {
+    const style = getCardStyle();
+    if (style === 'handdrawn') {
+      btn.innerHTML = '🎨 原版美術';
+      btn.title = '切換至原版風格';
+      btn.classList.add('handdrawn-active');
+    } else {
+      btn.innerHTML = '✏️ 手繪風格';
+      btn.title = '切換至手繪風格';
+      btn.classList.remove('handdrawn-active');
+    }
+  },
+
+  // ============================
   // Gallery Page
   // ============================
   galleryInitialized: false,
@@ -233,15 +276,17 @@ const App = {
         wrapper.style.textAlign = 'center';
         const stationEl = document.createElement('div');
         stationEl.style.cursor = 'pointer';
+        const stImgSrc = getCardImage(st);
         stationEl.innerHTML = `
-          <img src="${st.image}" alt="${st.name}" style="width:180px;height:180px;object-fit:cover;border-radius:12px;border:2px solid rgba(16,185,129,0.4);transition:transform 0.3s">
+          <img src="${stImgSrc}" alt="${st.name}" style="width:180px;height:180px;object-fit:cover;border-radius:12px;border:2px solid rgba(16,185,129,0.4);transition:transform 0.3s">
         `;
         stationEl.querySelector('img').addEventListener('mouseenter', function() { this.style.transform = 'scale(1.05)'; });
         stationEl.querySelector('img').addEventListener('mouseleave', function() { this.style.transform = ''; });
         stationEl.addEventListener('click', () => {
           const overlay = document.getElementById('card-preview');
           const container = document.getElementById('card-preview-card');
-          container.innerHTML = `<div style="text-align:center"><img src="${st.image}" style="max-width:320px;border-radius:16px;border:3px solid rgba(16,185,129,0.5)"><div style="font-family:var(--font-chinese);margin-top:12px;font-size:1.2rem;color:var(--color-accent-emerald)">${st.name}</div><div style="color:var(--color-text-muted);font-size:0.85rem;margin-top:4px">收集站背卡</div></div>`;
+          const stPreviewSrc = getCardImage(st);
+          container.innerHTML = `<div style="text-align:center"><img src="${stPreviewSrc}" style="max-width:320px;border-radius:16px;border:3px solid rgba(16,185,129,0.5)"><div style="font-family:var(--font-chinese);margin-top:12px;font-size:1.2rem;color:var(--color-accent-emerald)">${st.name}</div><div style="color:var(--color-text-muted);font-size:0.85rem;margin-top:4px">收集站背卡</div></div>`;
           overlay.classList.add('active');
           overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove('active'); };
         });
@@ -659,7 +704,7 @@ const App = {
     const stationImg = document.getElementById('station-card-image');
     const stationTypeName = document.getElementById('station-type-name');
     if (player.stationCard) {
-      stationImg.src = player.stationCard.image;
+      stationImg.src = getCardImage(player.stationCard);
       stationImg.alt = player.stationCard.name;
       stationImg.style.display = 'block';
       if (stationTypeName) stationTypeName.textContent = player.stationCard.name;
@@ -673,7 +718,7 @@ const App = {
       const slot = document.createElement('div');
       slot.className = 'collection-slot filled';
       slot.innerHTML = `
-        <img src="${card.image}" alt="${card.name}">
+        <img src="${getCardImage(card)}" alt="${card.name}">
         <span class="slot-monster-name">${card.emoji}${card.name}</span>
       `;
       container.appendChild(slot);
