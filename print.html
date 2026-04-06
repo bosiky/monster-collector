@@ -2,90 +2,124 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <!-- Ensure accurate colors when printing -->
   <style>
-    @media print {
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      @page {
-        size: A4;
-        margin: 10mm; /* A4 standard margin */
-      }
-      body {
-        background: white !important;
-      }
-    }
-
+    /* Reset and Base */
     * {
       box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
-    
     body {
       margin: 0;
-      padding: 20px;
-      background: #f0f0f0;
+      padding: 0;
+      background: #e0e0e0;
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
-
-    /* A4 Container Preview */
-    .print-page {
+    
+    /* UI Controls - Hidden on print */
+    .controls {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
       background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .btn {
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #8b5cf6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    @media print {
+      .controls { display: none !important; }
+      body { background: white !important; }
+    }
+
+    /* A4 Print Page Setup */
+    @page {
+      size: A4;
+      margin: 0; /* Zero margin to ensure absolute control */
+    }
+    .print-page {
       width: 210mm;
-      min-height: 297mm;
-      margin: 0 auto 20px auto;
-      padding: 10mm;
+      height: 297mm;
+      background: white;
+      margin: 0 auto;
+      margin-bottom: 20px;
+      position: relative;
+      page-break-after: always;
+      overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    @media print {
+      .print-page {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Grid container for 3x3 cards, perfectly centered */
+    /* Cards: 63.5mm x 88.9mm, 3x3 grid = 190.5mm x 266.7mm */
+    /* Margins required to perfectly center: */
+    /* Left/Right: (210 - 190.5) / 2 = 9.75mm */
+    /* Top/Bottom: (297 - 266.7) / 2 = 15.15mm */
+    .card-grid {
+      position: absolute;
+      top: 15.15mm;
+      left: 9.75mm;
+      width: 190.5mm;
+      height: 266.7mm;
       display: flex;
       flex-wrap: wrap;
       align-content: flex-start;
-      gap: 2mm; /* Tiny gap for cutting */
+      /* Zero gaps to allow continuous printing */
+      gap: 0;
     }
 
-    /* Standard Card Size (approx 63.5mm x 88.9mm). Using slightly larger container to ensure everything fits gracefully with cut lines */
-    .card-container {
+    /* Standard Card Size (63.5mm x 88.9mm) */
+    .card-wrapper {
       width: 63.5mm;
       height: 88.9mm;
-      position: relative;
-      /* Dotted cut lines */
-      border: 1px dashed rgba(0,0,0,0.3);
-      padding: 1.5mm;
-      margin-bottom: 2mm;
+      padding: 0;
+      margin: 0;
+      outline: 1px dotted rgba(0,0,0,0.3); /* Cut marking outline */
     }
 
-    /* Exact original styling layout ported here to ensure absolute fidelity during print */
+    /* Card styling ported from actual game */
     .card {
       width: 100%;
       height: 100%;
-      border-radius: 8px; /* Smooth corners for the actual card art */
       background: #111;
-      padding: 0;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
-      border: 2px solid;
+      border: 3px solid;
     }
 
     .card-header {
-      padding: 4px;
-      font-size: 0.75rem;
+      padding: 5px;
+      font-size: 0.8rem;
       font-weight: bold;
       color: white;
       text-align: center;
-      letter-spacing: 1px;
       background: rgba(0,0,0,0.5);
       z-index: 2;
+      /* Truncate long names */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    
-    .card-emoji { margin-right: 2px; }
 
     .card-image-wrap {
       flex: 1;
       width: 100%;
       position: relative;
-      overflow: hidden;
+      background: #222;
     }
 
     .card-image {
@@ -97,64 +131,58 @@
     .card-overlay {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-      padding: 6px;
+      background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+      padding: 8px 6px;
       text-align: center;
     }
 
     .card-desc {
-      font-size: 0.6rem;
+      font-size: 0.65rem;
       color: rgba(255,255,255,0.9);
-      line-height: 1.3;
+      line-height: 1.4;
     }
 
     .card-type {
       position: absolute;
-      top: 4px; left: 4px;
-      font-size: 0.5rem;
+      top: 5px; left: 5px;
+      font-size: 0.55rem;
       background: rgba(0,0,0,0.7);
       padding: 2px 6px;
       border-radius: 4px;
       color: white;
-      text-transform: uppercase;
       z-index: 2;
     }
 
-    /* 3x3 layout allows up to 9 cards per A4 page. 63.5 * 3 = 190.5mm (fits in 210mm) */
-    @media print {
-      .print-page {
-        margin: 0;
-        padding: 0;
-        box-shadow: none;
-        page-break-after: always;
-        width: 100%;
-        height: auto;
-      }
-      body { padding: 0; margin: 0; }
-      .no-print { display: none !important; }
+    /* Card Back Styling */
+    .card.card-back {
+      background: linear-gradient(135deg, #1a1a3e 0%, #0d0d24 100%);
+      border-color: #f59e0b; /* Gold border */
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     
-    .controls {
-      text-align: center;
-      margin-bottom: 20px;
+    .card.card-back::before {
+      content: '';
+      position: absolute;
+      top: 4mm; bottom: 4mm; left: 4mm; right: 4mm;
+      border: 1px solid rgba(245,158,11,0.4);
     }
-    .btn {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background: #8b5cf6;
-      color: white;
-      border: none;
-      border-radius: 8px;
+    
+    .card-back-star {
+      font-size: 3rem;
+      text-shadow: 0 0 15px rgba(245,158,11,0.8);
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   
-  <div class="no-print controls">
-    <h1>🖨️ Monster Collector - 卡牌 PDF 列印</h1>
-    <p>已經排版為標準 A4 格式，每頁可印 9 張（尺寸：63.5 x 88.9 mm Standard TCG）。包含所有怪物、技能及收集站卡！</p>
-    <button class="btn" onclick="window.print()">列印 / 輸出為 PDF</button>
+  <div class="controls">
+    <h1 style="margin-top:0">🖨️ Monster Collector - 雙面列印 PDF</h1>
+    <p style="color:#555">已為 A4 雙面列印優化排版：完全置中、無縫 3x3 陣列。<br>
+      請使用「雙面列印（翻轉長邊）」功能，即可獲得正面彩色、背面星星的實體卡牌！</p>
+    <button class="btn" onclick="window.print()">列印 / 存檔為 PDF</button>
   </div>
 
   <div id="pages-container"></div>
@@ -165,25 +193,36 @@
     document.addEventListener("DOMContentLoaded", () => {
       const container = document.getElementById('pages-container');
       
-      // Collect all cards
       const allCards = [
         ...CARD_DATA.monsters.map(c => ({...c, cat: 'monster'})),
         ...CARD_DATA.skills.map(c => ({...c, cat: 'skill'})),
         ...CARD_DATA.stations.map(c => ({...c, cat: 'station'}))
       ];
 
-      // A4 pages can fit 9 cards (3x3 grid) comfortably with our margins
       const cardsPerPage = 9;
       let html = '';
 
       for (let i = 0; i < allCards.length; i += cardsPerPage) {
-        const pageCards = allCards.slice(i, i + cardsPerPage);
+        let pageCards = allCards.slice(i, i + cardsPerPage);
         
-        html += '<div class="print-page">';
+        // Pad the last page to have exactly 9 elements for grid alignment if needed
+        while (pageCards.length < cardsPerPage) {
+          pageCards.push(null);
+        }
+
+        // ============================
+        // Provide PAGE FRONT (Card Faces)
+        // ============================
+        html += '<div class="print-page"><div class="card-grid">';
         pageCards.forEach(card => {
-          
-          let color = card.color || '#333';
-          if (card.cat === 'station') color = '#10b981'; // Greenish for stations generally
+          if (!card) {
+            // Empty placeholder to preserve grid flow
+            html += `<div class="card-wrapper" style="outline:none"></div>`;
+            return;
+          }
+
+          let color = card.color || '#555';
+          if (card.cat === 'station') color = '#10b981';
           
           let typeLabel = '';
           if (card.type === 'shield') typeLabel = '🛡️ 防禦';
@@ -196,14 +235,14 @@
           else typeLabel = '🃏 技能';
 
           html += `
-            <div class="card-container">
+            <div class="card-wrapper">
               <div class="card" style="border-color: ${color}">
                 <div class="card-type" style="color: ${color}">${typeLabel}</div>
                 <div class="card-header">
-                  <span class="card-emoji">${card.emoji || ''}</span> ${card.name}
+                  <span>${card.emoji || ''}</span> ${card.name}
                 </div>
                 <div class="card-image-wrap">
-                  <img src="${card.image || ''}" class="card-image" alt="${card.name}">
+                  ${card.image ? `<img src="${card.image}" class="card-image">` : ''}
                   <div class="card-overlay">
                     <div class="card-desc">${card.description || '收集站背景卡'}</div>
                   </div>
@@ -212,7 +251,29 @@
             </div>
           `;
         });
-        html += '</div>';
+        html += '</div></div>';
+
+        // ============================
+        // Provide PAGE BACK (Card Backs)
+        // ============================
+        // IMPORTANT: When duplex printing, Top-Left card on FRONT maps to Top-Right card on BACK.
+        // Because our card backs are uniformly identical stars, we simply print 9 identical backs!
+        html += '<div class="print-page"><div class="card-grid">';
+        pageCards.forEach(card => {
+          if (!card) {
+            html += `<div class="card-wrapper" style="outline:none"></div>`;
+            return;
+          }
+          // The uniform magic star card back
+          html += `
+            <div class="card-wrapper">
+              <div class="card card-back">
+                <div class="card-back-star">⭐⭐</div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div></div>';
       }
 
       container.innerHTML = html;
