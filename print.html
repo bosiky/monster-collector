@@ -312,10 +312,9 @@
         ...CARD_DATA.skills.map(c => ({...c, cat: 'skill'}))
       ];
 
-      // Group 2: Station Cards -> 2 copies each, 4 per page
+      // Group 2: Station Cards -> 1 copy each, 4 per page
       const stationCards = [];
       CARD_DATA.stations.forEach(c => {
-        stationCards.push({...c, cat: 'station'});
         stationCards.push({...c, cat: 'station'});
       });
 
