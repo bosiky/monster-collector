@@ -213,7 +213,6 @@ class NetworkManager {
   _sanitizeStateForPlayer(state, playerIndex) {
     return {
       deck: { count: state.deck.length },
-      discardPile: state.discardPile,
       players: state.players.map((p, i) => {
         if (i === playerIndex) {
           // Full info for this player

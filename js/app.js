@@ -644,18 +644,6 @@ const App = {
       deckContainer.classList.remove('animate-pulse-glow');
       deckContainer.onclick = null;
     }
-
-    // Discard
-    const discardContainer = document.getElementById('discard-container');
-    discardContainer.innerHTML = '';
-
-    if (state.discardPile.length > 0) {
-      const topCard = state.discardPile[state.discardPile.length - 1];
-      const discardStack = renderCardStack(state.discardPile.length, topCard);
-      discardContainer.appendChild(discardStack);
-    } else {
-      discardContainer.innerHTML = `<div class="empty-discard">棄牌堆</div>`;
-    }
   },
 
   showDrawnCardToast(card) {
@@ -1462,17 +1450,6 @@ const App = {
       deckContainer.style.cursor = 'default';
       deckContainer.classList.remove('animate-pulse-glow');
       deckContainer.onclick = null;
-    }
-
-    // Discard
-    const discardContainer = document.getElementById('discard-container');
-    discardContainer.innerHTML = '';
-    if (state.discardPile && state.discardPile.length > 0) {
-      const topDiscard = state.discardPile[state.discardPile.length - 1];
-      const discardStack = renderCardStack(state.discardPile.length, topDiscard);
-      discardContainer.appendChild(discardStack);
-    } else {
-      discardContainer.innerHTML = '<div class="empty-discard">棄牌堆</div>';
     }
 
     // My hand

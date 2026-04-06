@@ -36,7 +36,6 @@ class MonsterCollectorGame {
 
     this.state = {
       deck: deck,
-      discardPile: [],
       players: Array.from({ length: this.playerCount }, (_, i) => ({
         index: i,
         name: this.playerNames[i],
@@ -60,7 +59,7 @@ class MonsterCollectorGame {
 
     this.addLog(`遊戲開始！${this.playerCount} 人對戰`);
     this.addLog(`目標：最快收集 ${this.targetCards} 張不重複的怪物卡`);
-    this.addLog(`遊戲機制更新：所有技能卡抽到後立即自動使用！沒有手牌與棄牌區！`);
+    this.addLog(`遊戲機制：所有技能卡抽到後立即自動使用！`);
     this.addLog(`--- ${this.currentPlayerName()} 的回合 ---`);
   }
 
@@ -200,9 +199,9 @@ class MonsterCollectorGame {
   }
 
   executeFreeze(card) {
-    const nextPlayerIdx = (this.state.currentPlayer + 1) % this.playerCount;
-    this.state.players[nextPlayerIdx].skipDraw = true;
-    this.addLog(`🥶 ${this.currentPlayerName()} 使用了靜止器！${this.state.players[nextPlayerIdx].name} 下一回合無法抽牌`);
+    // Freezer affects the player who drew it (self) - skip their own next draw
+    this.current.skipDraw = true;
+    this.addLog(`🥶 ${this.currentPlayerName()} 抽到了靜止器！下一回合將無法抽牌`);
     this.returnToDeck(card);
     this.afterAction();
   }
@@ -382,8 +381,6 @@ class MonsterCollectorGame {
   getStats() {
     return {
       deckCount: this.state.deck.length,
-      discardCount: 0,
-      topDiscard: null,
       players: this.state.players.map(p => ({
         name: p.name,
         handCount: 0,

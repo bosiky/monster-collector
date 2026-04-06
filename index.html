@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Monster Collector - A strategic card game where players race to collect monster cards. Supports 2-3 players with skill cards for stealing, shielding, and swapping.">
   <title>Monster Collector | 怪獸收集者</title>
-  <link rel="stylesheet" href="css/index.css?v=8">
-  <link rel="stylesheet" href="css/cards.css?v=8">
-  <link rel="stylesheet" href="css/game.css?v=8">
+  <link rel="stylesheet" href="css/index.css?v=9">
+  <link rel="stylesheet" href="css/cards.css?v=9">
+  <link rel="stylesheet" href="css/game.css?v=9">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='80'>🐉</text></svg>">
 </head>
 <body>
@@ -121,7 +121,7 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">🔄</span>
-        <span>每回合：抽牌 → 行動（放置怪物/使用技能/跳過）→ 棄牌</span>
+        <span>每回合：抽牌 → 自動放置怪物/觸發技能 → 下一位玩家</span>
       </div>
 
       <h4 style="font-family:var(--font-chinese);color:var(--color-text-muted);margin:12px 0 6px;font-size:0.9rem">🃏 卡牌種類</h4>
@@ -151,7 +151,7 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">🥶</span>
-        <span><strong>靜止器</strong>：下一回合不能抽卡一次</span>
+        <span><strong>靜止器</strong>：抽到後自己下一回合不能抽卡</span>
       </div>
 
       <h4 style="font-family:var(--font-chinese);color:var(--color-text-muted);margin:12px 0 6px;font-size:0.9rem">📋 玩法說明</h4>
@@ -165,11 +165,11 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">3️⃣</span>
-        <span><strong>⭐幸運星</strong>：抽中怪物時可能觸發，下回合可多抽1張牌（每局限1次）</span>
+        <span><strong>⭐幸運星</strong>：抽中怪物時可能觸發，下回合可多抽1張牌</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">4️⃣</span>
-        <span>技能卡進入手牌，可選擇使用或保留</span>
+        <span>技能卡抽到後立即自動使用，不進入手牌</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">5️⃣</span>
@@ -181,7 +181,7 @@
       </div>
       <div class="rule-item">
         <span class="rule-icon">7️⃣</span>
-        <span>收集站不能有重複怪物，手牌上限 5～12 張</span>
+        <span>收集站不能有重複怪物，重複的怪物會返回牌堆</span>
       </div>
     </div>
   </div>
@@ -310,7 +310,7 @@
       <!-- Opponents -->
       <div class="opponents-area" id="opponents-area"></div>
 
-      <!-- Center: Deck + Action Prompt + Discard -->
+      <!-- Center: Deck + Action Prompt -->
       <div class="center-area">
         <div class="deck-zone">
           <div id="deck-container"></div>
@@ -319,13 +319,6 @@
 
         <div class="action-prompt" id="action-prompt">
           <div class="prompt-title">準備開始</div>
-        </div>
-
-        <div class="discard-zone">
-          <div id="discard-container">
-            <div class="empty-discard">棄牌堆</div>
-          </div>
-          <span class="deck-label">棄牌堆</span>
         </div>
       </div>
 
@@ -442,11 +435,11 @@
 
   <!-- Scripts -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="js/cards.js?v=8"></script>
-  <script src="js/animations.js?v=8"></script>
-  <script src="js/game.js?v=8"></script>
-  <script src="js/network.js?v=8"></script>
-  <script src="js/generator.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/cards.js?v=9"></script>
+  <script src="js/animations.js?v=9"></script>
+  <script src="js/game.js?v=9"></script>
+  <script src="js/network.js?v=9"></script>
+  <script src="js/generator.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 </body>
 </html>

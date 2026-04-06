@@ -226,7 +226,7 @@ const CARD_DATA = {
       color: '#0ea5e9',
       image: 'assets/skills/freezer.png',
       handdrawnImage: 'assets/handdrawn/skills/freezer.png',
-      description: '下一回合不能抽卡一次',
+      description: '抽到後自己下一回合不能抽卡',
       effect: 'freeze'
     }
   ],
