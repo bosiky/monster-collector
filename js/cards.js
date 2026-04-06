@@ -193,7 +193,8 @@ const CARD_DATA = {
   stations: [
     { id: 'station-1', name: '狗狗UFO', image: 'assets/stations/station-1.png' },
     { id: 'station-2', name: '貓貓UFO', image: 'assets/stations/station-2.png' },
-    { id: 'station-3', name: '喵星巴士', image: 'assets/stations/station-3.png' }
+    { id: 'station-3', name: '狗狗巴士', image: 'assets/stations/station-3.png' },
+    { id: 'station-4', name: '貓貓巴士', image: 'assets/stations/station-4.png' }
   ]
 };
 
