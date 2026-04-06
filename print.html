@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <!-- Ensure accurate colors when printing -->
+  <style>
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      @page {
+        size: A4;
+        margin: 10mm; /* A4 standard margin */
+      }
+      body {
+        background: white !important;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    /* A4 Container Preview */
+    .print-page {
+      background: white;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 20px auto;
+      padding: 10mm;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 2mm; /* Tiny gap for cutting */
+    }
+
+    /* Standard Card Size (approx 63.5mm x 88.9mm). Using slightly larger container to ensure everything fits gracefully with cut lines */
+    .card-container {
+      width: 63.5mm;
+      height: 88.9mm;
+      position: relative;
+      /* Dotted cut lines */
+      border: 1px dashed rgba(0,0,0,0.3);
+      padding: 1.5mm;
+      margin-bottom: 2mm;
+    }
+
+    /* Exact original styling layout ported here to ensure absolute fidelity during print */
+    .card {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px; /* Smooth corners for the actual card art */
+      background: #111;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid;
+    }
+
+    .card-header {
+      padding: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: white;
+      text-align: center;
+      letter-spacing: 1px;
+      background: rgba(0,0,0,0.5);
+      z-index: 2;
+    }
+    
+    .card-emoji { margin-right: 2px; }
+
+    .card-image-wrap {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      padding: 6px;
+      text-align: center;
+    }
+
+    .card-desc {
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.3;
+    }
+
+    .card-type {
+      position: absolute;
+      top: 4px; left: 4px;
+      font-size: 0.5rem;
+      background: rgba(0,0,0,0.7);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: white;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    /* 3x3 layout allows up to 9 cards per A4 page. 63.5 * 3 = 190.5mm (fits in 210mm) */
+    @media print {
+      .print-page {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        page-break-after: always;
+        width: 100%;
+        height: auto;
+      }
+      body { padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+    }
+    
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #8b5cf6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="no-print controls">
+    <h1>🖨️ Monster Collector - 卡牌 PDF 列印</h1>
+    <p>已經排版為標準 A4 格式，每頁可印 9 張（尺寸：63.5 x 88.9 mm Standard TCG）。包含所有怪物、技能及收集站卡！</p>
+    <button class="btn" onclick="window.print()">列印 / 輸出為 PDF</button>
+  </div>
+
+  <div id="pages-container"></div>
+
+  <!-- Load Cards -->
+  <script src="js/cards.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById('pages-container');
+      
+      // Collect all cards
+      const allCards = [
+        ...CARD_DATA.monsters.map(c => ({...c, cat: 'monster'})),
+        ...CARD_DATA.skills.map(c => ({...c, cat: 'skill'})),
+        ...CARD_DATA.stations.map(c => ({...c, cat: 'station'}))
+      ];
+
+      // A4 pages can fit 9 cards (3x3 grid) comfortably with our margins
+      const cardsPerPage = 9;
+      let html = '';
+
+      for (let i = 0; i < allCards.length; i += cardsPerPage) {
+        const pageCards = allCards.slice(i, i + cardsPerPage);
+        
+        html += '<div class="print-page">';
+        pageCards.forEach(card => {
+          
+          let color = card.color || '#333';
+          if (card.cat === 'station') color = '#10b981'; // Greenish for stations generally
+          
+          let typeLabel = '';
+          if (card.type === 'shield') typeLabel = '🛡️ 防禦';
+          else if (card.type === 'counter') typeLabel = '🔄 反彈';
+          else if (card.type === 'special') typeLabel = '✨ 特殊';
+          else if (card.type === 'bomb') typeLabel = '💣 攻擊';
+          else if (card.type === 'steal') typeLabel = '⚡ 竊取';
+          else if (card.type === 'monster') typeLabel = '🐉 怪物';
+          else if (card.cat === 'station') typeLabel = '🏠 基地';
+          else typeLabel = '🃏 技能';
+
+          html += `
+            <div class="card-container">
+              <div class="card" style="border-color: ${color}">
+                <div class="card-type" style="color: ${color}">${typeLabel}</div>
+                <div class="card-header">
+                  <span class="card-emoji">${card.emoji || ''}</span> ${card.name}
+                </div>
+                <div class="card-image-wrap">
+                  <img src="${card.image || ''}" class="card-image" alt="${card.name}">
+                  <div class="card-overlay">
+                    <div class="card-desc">${card.description || '收集站背景卡'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+    });
+  </script>
+</body>
+</html>

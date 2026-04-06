@@ -267,8 +267,13 @@
   <!-- ================================ -->
   <div class="page" id="page-gallery">
     <div class="gallery-header">
-      <h1>Card Gallery</h1>
-      <p class="text-muted" style="font-family:var(--font-chinese);margin-top:8px">點擊卡牌查看大圖</p>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h1>Card Gallery</h1>
+          <p class="text-muted" style="font-family:var(--font-chinese);margin-top:8px">點擊卡牌查看大圖</p>
+        </div>
+        <button class="btn btn-gold" onclick="window.open('print.html', '_blank')">🖨️ 匯出列印版 (A4)</button>
+      </div>
       <div class="gallery-tabs">
         <button class="gallery-tab active" data-filter="all">全部</button>
         <button class="gallery-tab" data-filter="monster">🐉 怪物卡</button>
