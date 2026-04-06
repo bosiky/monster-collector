@@ -666,6 +666,7 @@ const App = {
       ${player.name} 的收集站
       ${player.hasShield ? '<span class="shield-indicator" style="position:static;margin-left:8px">🛡️</span>' : ''}
       ${player.skipDraw ? '<span style="color:#0ea5e9;font-size:0.7rem;margin-left:4px">🥶靜止中</span>' : ''}
+      ${player.extraDraw ? '<span style="color:#f59e0b;font-size:0.7rem;margin-left:4px">⭐下回合抽2張</span>' : ''}
     `;
     document.getElementById('player-station-progress').textContent =
       `${player.collection.length} / ${this.settings.targetCards}`;
@@ -683,13 +684,13 @@ const App = {
       if (stationTypeName) stationTypeName.textContent = '';
     }
 
-    // Render filled slots
+    // Render filled slots with monster card thumbnails
     player.collection.forEach((card) => {
       const slot = document.createElement('div');
       slot.className = 'collection-slot filled';
       slot.innerHTML = `
-        <span style="font-size:1.2rem">${card.emoji}</span>
-        <span style="font-family:var(--font-chinese);color:var(--color-text-muted);font-size:0.5rem">${card.name}</span>
+        <img src="${card.image}" alt="${card.name}">
+        <span class="slot-monster-name">${card.emoji}${card.name}</span>
       `;
       container.appendChild(slot);
     });
@@ -746,12 +747,18 @@ const App = {
   },
 
   animateMonsterAutoPlace(card, result) {
-    const msg = result === 'placed'
-      ? `${card.emoji} ${card.name} 飛入收集站！`
-      : `${card.emoji} ${card.name} 已重複，回到牌堆`;
-    const color = result === 'placed' ? '#10b981' : '#f59e0b';
+    let msg, color;
+    if (result === 'lucky') {
+      msg = `⭐🌟 ${card.emoji} ${card.name} 飛入收集站！幸運星降臨！`;
+      color = 'linear-gradient(135deg, #f59e0b, #ef4444)';
+    } else if (result === 'placed') {
+      msg = `${card.emoji} ${card.name} 飛入收集站！`;
+      color = '#10b981';
+    } else {
+      msg = `${card.emoji} ${card.name} 已重複，回到牌堆`;
+      color = '#f59e0b';
+    }
     
-    // Create inline toast
     const toast = document.createElement('div');
     toast.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 24px;border-radius:12px;font-family:var(--font-chinese);font-size:0.95rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;pointer-events:none;white-space:nowrap`;
     toast.textContent = msg;
@@ -760,7 +767,7 @@ const App = {
       toast.style.transition = 'opacity 0.5s';
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 500);
-    }, 2000);
+    }, result === 'lucky' ? 3000 : 2000);
   },
 
   renderActionPrompt(state) {

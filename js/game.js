@@ -45,6 +45,7 @@ class MonsterCollectorGame {
         collection: [],
         hasShield: false,
         skipDraw: false,
+        extraDraw: false,
         stationCard: stations[i % stations.length] || null
       })),
       currentPlayer: 0,
@@ -53,7 +54,10 @@ class MonsterCollectorGame {
       gameOver: false,
       winner: null,
       log: [],
-      lastDrawnCard: null  // Track last drawn card for animations
+      lastDrawnCard: null,
+      luckyStarUsed: false,  // Only one lucky star per game
+      drawsThisTurn: 0,      // Track draws this turn
+      maxDrawsThisTurn: 1    // Normal = 1, lucky star = 2
     };
 
     this.addLog(`遊戲開始！${this.playerCount} 人對戰`);
@@ -111,6 +115,13 @@ class MonsterCollectorGame {
       return false;
     }
 
+    // Set up extra draw for this turn (from previous lucky star)
+    if (this.state.drawsThisTurn === 0 && this.current.extraDraw) {
+      this.state.maxDrawsThisTurn = 2;
+      this.current.extraDraw = false;
+      this.addLog(`⭐ ${this.currentPlayerName()} 幸運星效果啟動！本回合可抽 2 張牌`);
+    }
+
     // Reshuffle discard if deck is empty
     if (this.state.deck.length === 0) {
       if (this.state.discardPile.length === 0) {
@@ -126,45 +137,68 @@ class MonsterCollectorGame {
 
     const card = this.state.deck.pop();
     this.state.lastDrawnCard = card;
+    this.state.drawsThisTurn++;
 
     if (card.type === 'monster') {
       // Check for duplicate in collection
       const hasDuplicate = this.current.collection.some(c => c.id === card.id);
       
       if (hasDuplicate) {
-        // Return to deck
         this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name}，但收集站已有相同怪物！卡牌回到牌堆`);
         this.returnToDeck(card);
-        this.state.phase = 'action';
-        this.onMonsterAutoPlaced(card, 'duplicate');
-        this.emitState();
-        return card;
       } else {
         // Auto place to collection
         this.current.collection.push(card);
         this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name}，自動放入收集站！(${this.current.collection.length}/${this.targetCards})`);
         
+        // Lucky Star check (15% chance, once per game, only on successful monster placement)
+        if (!this.state.luckyStarUsed && Math.random() < 0.15) {
+          this.state.luckyStarUsed = true;
+          this.current.extraDraw = true;
+          this.addLog(`⭐🌟 幸運星降臨！${this.currentPlayerName()} 下回合可以抽取 2 張卡牌！`);
+          this.onMonsterAutoPlaced(card, 'lucky');
+        } else {
+          this.onMonsterAutoPlaced(card, 'placed');
+        }
+
         // Check win condition
         if (this.current.collection.length >= this.targetCards) {
           this.state.gameOver = true;
           this.state.winner = this.state.currentPlayer;
           this.addLog(`🏆 ${this.currentPlayerName()} 收集了 ${this.targetCards} 張怪物卡，獲勝！`);
-          this.onMonsterAutoPlaced(card, 'placed');
           this.onVictory(this.state.currentPlayer);
           this.emitState();
           return card;
         }
-        
-        this.state.phase = 'action';
-        this.onMonsterAutoPlaced(card, 'placed');
-        this.emitState();
-        return card;
       }
+
+      // Check if more draws available
+      if (this.state.drawsThisTurn < this.state.maxDrawsThisTurn) {
+        // Stay in draw phase for extra draw
+        this.addLog(`🃏 還可以再抽 ${this.state.maxDrawsThisTurn - this.state.drawsThisTurn} 張牌`);
+        this.state.phase = 'draw';
+      } else {
+        this.state.phase = 'action';
+      }
+      if (!hasDuplicate) {
+        // Already called onMonsterAutoPlaced above
+      } else {
+        this.onMonsterAutoPlaced(card, 'duplicate');
+      }
+      this.emitState();
+      return card;
     } else {
       // Skill card: goes to hand
       this.current.hand.push(card);
       this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name} (技能卡)`);
-      this.state.phase = 'action';
+      
+      // Check if more draws available
+      if (this.state.drawsThisTurn < this.state.maxDrawsThisTurn) {
+        this.addLog(`🃏 還可以再抽 ${this.state.maxDrawsThisTurn - this.state.drawsThisTurn} 張牌`);
+        this.state.phase = 'draw';
+      } else {
+        this.state.phase = 'action';
+      }
       this.emitState();
       return card;
     }
@@ -423,6 +457,8 @@ class MonsterCollectorGame {
     if (this.state.gameOver) return;
 
     this.state.lastDrawnCard = null;
+    this.state.drawsThisTurn = 0;
+    this.state.maxDrawsThisTurn = 1;
     this.state.currentPlayer = (this.state.currentPlayer + 1) % this.playerCount;
     if (this.state.currentPlayer === 0) {
       this.state.turnNumber++;
