@@ -26,6 +26,14 @@ class MonsterCollectorGame {
   init() {
     const deck = shuffleDeck(createDeck(this.playerCount));
 
+    // Assign random station cards to players
+    const stations = CARD_DATA.stations ? [...CARD_DATA.stations] : [];
+    // Shuffle stations
+    for (let i = stations.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [stations[i], stations[j]] = [stations[j], stations[i]];
+    }
+
     this.state = {
       deck: deck,
       discardPile: [],
@@ -34,7 +42,9 @@ class MonsterCollectorGame {
         name: this.playerNames[i],
         hand: [],
         collection: [],
-        hasShield: false
+        hasShield: false,
+        skipDraw: false,
+        stationCard: stations[i % stations.length] || null
       })),
       currentPlayer: 0,
       phase: 'draw',  // 'draw' | 'action' | 'discard' | 'waiting'
@@ -83,6 +93,15 @@ class MonsterCollectorGame {
   drawCard() {
     if (this.state.phase !== 'draw') return false;
     if (this.state.gameOver) return false;
+
+    // Check freeze: skip draw this turn
+    if (this.current.skipDraw) {
+      this.current.skipDraw = false;
+      this.addLog(`🥶 ${this.currentPlayerName()} 被靜止器影響，本回合無法抽牌！`);
+      this.state.phase = 'action';
+      this.emitState();
+      return false;
+    }
 
     // Reshuffle discard if deck is empty
     if (this.state.deck.length === 0) {
@@ -164,8 +183,10 @@ class MonsterCollectorGame {
         return this.executeSteal(card);
       case 'shield':
         return this.executeShield(card);
-      case 'swap':
-        return this.executeSwap(card);
+      case 'bomb':
+        return this.executeBomb(card);
+      case 'freeze':
+        return this.executeFreeze(card);
     }
 
     return false;
@@ -236,52 +257,70 @@ class MonsterCollectorGame {
     return true;
   }
 
-  executeSwap(card) {
-    // Find opponents with cards in hand
+  executeBomb(card) {
+    const bombPower = card.bombPower || 1;
+    // Find opponents with cards in collection
     const targets = this.state.players.filter((p, i) => 
-      i !== this.state.currentPlayer && p.hand.length > 0
+      i !== this.state.currentPlayer && p.collection.length > 0
     );
 
     if (targets.length === 0) {
-      this.addLog(`${this.currentPlayerName()} 使用了 🔄交換，但沒有可交換的對手！`);
+      this.addLog(`${this.currentPlayerName()} 使用了 ${card.emoji}${card.name}，但沒有可炸毀的目標！`);
       this.state.phase = 'discard';
       this.checkDiscard();
       return true;
     }
 
     this.state.phase = 'waiting';
+    this._pendingBombPower = bombPower;
+    this._pendingBombCard = card;
     this.emitState();
-    this.onNeedTarget('swap', targets, (targetIndex) => {
-      this.resolveSwap(targetIndex);
+    this.onNeedTarget('bomb', targets, (targetIndex) => {
+      this.resolveBomb(targetIndex);
     });
     return true;
   }
 
-  resolveSwap(targetIndex) {
+  resolveBomb(targetIndex) {
     const target = this.state.players[targetIndex];
-    const myHand = this.current.hand;
+    const bombPower = this._pendingBombPower || 1;
+    const card = this._pendingBombCard;
 
-    if (myHand.length === 0 || target.hand.length === 0) {
-      this.addLog('交換失敗：一方手牌為空');
+    // Check shield
+    if (target.hasShield) {
+      target.hasShield = false;
+      this.addLog(`${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 攻擊 ${target.name}，但被 🛡️護盾 擋住了！`);
       this.state.phase = 'discard';
       this.checkDiscard();
       return;
     }
 
-    // Random swap
-    const myIdx = Math.floor(Math.random() * myHand.length);
-    const theirIdx = Math.floor(Math.random() * target.hand.length);
+    // Destroy random cards from collection
+    const destroyCount = Math.min(bombPower, target.collection.length);
+    const destroyed = [];
+    for (let i = 0; i < destroyCount; i++) {
+      const randomIdx = Math.floor(Math.random() * target.collection.length);
+      const removedCard = target.collection.splice(randomIdx, 1)[0];
+      this.state.discardPile.push(removedCard);
+      destroyed.push(`${removedCard.emoji}${removedCard.name}`);
+    }
 
-    const myCard = myHand[myIdx];
-    const theirCard = target.hand[theirIdx];
+    this.addLog(`💥 ${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 炸毀了 ${target.name} 收集站的 ${destroyed.join('、')}！`);
+    
+    this._pendingBombPower = null;
+    this._pendingBombCard = null;
+    this.state.phase = 'discard';
+    this.checkDiscard();
+  }
 
-    myHand[myIdx] = theirCard;
-    target.hand[theirIdx] = myCard;
-
-    this.addLog(`${this.currentPlayerName()} 與 ${target.name} 交換了手牌！`);
+  executeFreeze(card) {
+    // Self-freeze: skip draw next turn
+    this.current.skipDraw = true;
+    this.addLog(`🥶 ${this.currentPlayerName()} 使用了靜止器！下一回合無法抽牌`);
     
     this.state.phase = 'discard';
     this.checkDiscard();
+    return true;
   }
 
   /**

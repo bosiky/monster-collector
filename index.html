@@ -52,7 +52,7 @@
         <div class="setting-value">
           <div class="number-input">
             <button id="btn-target-minus">−</button>
-            <span class="value" id="val-target">5</span>
+            <span class="value" id="val-target">12</span>
             <button id="btn-target-plus">+</button>
           </div>
         </div>
@@ -67,18 +67,21 @@
 
       <!-- Player Names -->
       <div class="player-names-section" id="player-names-section">
-        <div class="section-title">玩家名稱</div>
+        <div class="section-title">玩家名稱 <button class="btn btn-sm btn-outline" id="btn-random-names" title="隨機產生名稱" style="margin-left:8px;font-size:0.75rem;padding:2px 8px">🎲 隨機</button></div>
         <div class="player-name-row">
           <div class="player-color-dot" style="background:var(--color-player-1)"></div>
           <input type="text" id="player-name-1" value="玩家1" maxlength="10">
+          <button class="btn-dice" data-target="player-name-1" title="隨機">🎲</button>
         </div>
         <div class="player-name-row">
           <div class="player-color-dot" style="background:var(--color-player-2)"></div>
           <input type="text" id="player-name-2" value="玩家2" maxlength="10">
+          <button class="btn-dice" data-target="player-name-2" title="隨機">🎲</button>
         </div>
         <div class="player-name-row hidden" id="player-name-3-row">
           <div class="player-color-dot" style="background:var(--color-player-3)"></div>
           <input type="text" id="player-name-3" value="玩家3" maxlength="10">
+          <button class="btn-dice" data-target="player-name-3" title="隨機">🎲</button>
         </div>
       </div>
     </div>
@@ -109,21 +112,57 @@
         <span class="rule-icon">🔄</span>
         <span>每回合：抽牌 → 行動（放置怪物/使用技能/跳過）→ 棄牌</span>
       </div>
+
+      <h4 style="font-family:var(--font-chinese);color:var(--color-text-muted);margin:12px 0 6px;font-size:0.9rem">🃏 卡牌種類</h4>
+      <div class="rule-item">
+        <span class="rule-icon">🐉</span>
+        <span><strong>怪物卡（12種）</strong>：放入收集站累積勝利</span>
+      </div>
       <div class="rule-item">
         <span class="rule-icon">🦹</span>
-        <span><strong>盜賊卡</strong>：偷走對手收集站 1 張怪物卡</span>
+        <span><strong>盜賊卡</strong>：偷走對手收集站 1 張怪物卡到你手中</span>
       </div>
       <div class="rule-item">
         <span class="rule-icon">🛡️</span>
-        <span><strong>防禦盾</strong>：抵擋一次盜賊卡攻擊</span>
+        <span><strong>防禦盾</strong>：抵擋一次盜賊/炸彈攻擊</span>
       </div>
       <div class="rule-item">
-        <span class="rule-icon">🧨</span>
-        <span><strong>TNT</strong>：與對手隨機交換 1 張手牌</span>
+        <span class="rule-icon">💣</span>
+        <span><strong>TNT×1</strong>：炸毀對手收集站 1 張怪物卡</span>
       </div>
       <div class="rule-item">
-        <span class="rule-icon">🃏</span>
-        <span>一開始沒有手牌，每回合抽 1 張，手牌上限 7 張</span>
+        <span class="rule-icon">💥</span>
+        <span><strong>TNT×3</strong>：炸毀對手收集站 2 張怪物卡</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🔥</span>
+        <span><strong>TNT×5</strong>：炸毀對手收集站 3 張怪物卡</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">🥶</span>
+        <span><strong>靜止器</strong>：使用後下一回合自己不能抽卡</span>
+      </div>
+
+      <h4 style="font-family:var(--font-chinese);color:var(--color-text-muted);margin:12px 0 6px;font-size:0.9rem">📋 玩法說明</h4>
+      <div class="rule-item">
+        <span class="rule-icon">1️⃣</span>
+        <span>一開始沒有手牌，每回合抽 1 張牌</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">2️⃣</span>
+        <span>抽到怪物卡可放入收集站，或留在手中</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">3️⃣</span>
+        <span>抽到技能卡可立即使用或保留到之後使用</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">4️⃣</span>
+        <span>手牌上限 7 張，超過需棄牌</span>
+      </div>
+      <div class="rule-item">
+        <span class="rule-icon">5️⃣</span>
+        <span>每位玩家有專屬收集站（隨機分配）</span>
       </div>
     </div>
   </div>

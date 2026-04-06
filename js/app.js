@@ -7,7 +7,7 @@ const App = {
   game: null,
   settings: {
     playerCount: 2,
-    targetCards: 5,
+    targetCards: 12,
     playerNames: ['玩家1', '玩家2', '玩家3']
   },
   logOpen: false,
@@ -85,9 +85,45 @@ const App = {
       this.updateSettingsDisplay();
     });
     document.getElementById('btn-target-plus').addEventListener('click', () => {
-      this.settings.targetCards = Math.min(10, this.settings.targetCards + 1);
+      this.settings.targetCards = Math.min(20, this.settings.targetCards + 1);
       this.updateSettingsDisplay();
     });
+
+    // Random name pool
+    this.randomNamePool = ['帥哥', '漂亮姊姊', '大叔', '阿貝', '阿珠瑪', '喔爸', '北鼻'];
+
+    // Dice buttons for individual name randomization
+    document.querySelectorAll('.btn-dice').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+        if (input) {
+          const randomName = this.randomNamePool[Math.floor(Math.random() * this.randomNamePool.length)];
+          input.value = randomName;
+          const idx = parseInt(targetId.replace('player-name-', '')) - 1;
+          this.settings.playerNames[idx] = randomName;
+          // Add animation
+          btn.style.transform = 'rotate(360deg)';
+          setTimeout(() => btn.style.transform = '', 300);
+        }
+      });
+    });
+
+    // Random all names button
+    const randomAllBtn = document.getElementById('btn-random-names');
+    if (randomAllBtn) {
+      randomAllBtn.addEventListener('click', () => {
+        const shuffled = [...this.randomNamePool].sort(() => Math.random() - 0.5);
+        for (let i = 1; i <= this.settings.playerCount; i++) {
+          const input = document.getElementById(`player-name-${i}`);
+          if (input) {
+            const name = shuffled[(i - 1) % shuffled.length];
+            input.value = name;
+            this.settings.playerNames[i - 1] = name;
+          }
+        }
+      });
+    }
 
     // Player name inputs
     for (let i = 1; i <= 3; i++) {
@@ -120,8 +156,8 @@ const App = {
     document.getElementById('val-target').textContent = this.settings.targetCards;
 
     const counts = CARD_COUNTS[this.settings.playerCount];
-    const totalMonsters = 7 * counts.monsterCopies;
-    const totalSkills = 3 * counts.skillCopies;
+    const totalMonsters = CARD_DATA.monsters.length * counts.monsterCopies;
+    const totalSkills = CARD_DATA.skills.length * counts.skillCopies;
     document.getElementById('val-deck-info').textContent =
       `${totalMonsters} 怪物 + ${totalSkills} 技能 = ${totalMonsters + totalSkills} 張（不發手牌）`;
 

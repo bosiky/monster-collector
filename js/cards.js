@@ -73,6 +73,56 @@ const CARD_DATA = {
       image: 'assets/monsters/rush.png',
       color: '#f97316',
       description: '高速衝刺的狂暴小怪物'
+    },
+    {
+      id: 'ou-niu',
+      name: '歐牛',
+      nameEn: 'Ou Niu',
+      emoji: '🐂',
+      rarity: 2,
+      image: 'assets/monsters/ou-niu.png',
+      color: '#7c3aed',
+      description: '蠻力無窮的神話鬥牛'
+    },
+    {
+      id: 'big-eye',
+      name: '大眼怪',
+      nameEn: 'Big Eye',
+      emoji: '👀',
+      rarity: 1,
+      image: 'assets/monsters/big-eye.png',
+      color: '#14b8a6',
+      description: '一隻巨大眼球的植物型怪物'
+    },
+    {
+      id: 'mushroom',
+      name: '靈感菇',
+      nameEn: 'Inspiration Shroom',
+      emoji: '🍄',
+      rarity: 2,
+      image: 'assets/monsters/mushroom.png',
+      color: '#a3e635',
+      description: '散發靈感孢子的神秘蘑菇'
+    },
+    {
+      id: 'block-boy',
+      name: '方塊boy',
+      nameEn: 'Block Boy',
+      emoji: '🤖',
+      rarity: 1,
+      image: 'assets/monsters/block-boy.png',
+      color: '#06b6d4',
+      description: '方方正正的可愛像素人'
+    },
+    {
+      id: 's-worm',
+      name: 'S蚯蚓',
+      nameEn: 'S-Worm',
+      emoji: '🐛',
+      rarity: 1,
+      image: 'assets/monsters/s-worm.png',
+      color: '#84cc16',
+      description: 'S形身體的地底蠕動怪物'
     }
   ],
   skills: [
@@ -93,26 +143,64 @@ const CARD_DATA = {
       emoji: '🛡️',
       color: '#3b82f6',
       image: 'assets/skills/defense-shield.png',
-      description: '保護收集站，下次被搶奪時無效化',
+      description: '保護收集站，下次被搶奪/炸彈時無效化',
       effect: 'shield'
     },
     {
-      id: 'tnt',
-      name: 'TNT',
-      nameEn: 'TNT',
-      emoji: '🧨',
+      id: 'tnt-1',
+      name: 'TNT×1',
+      nameEn: 'TNT ×1',
+      emoji: '💣',
+      color: '#f97316',
+      image: 'assets/skills/tnt-1.png',
+      description: '炸毀對手收集站1張怪物卡',
+      effect: 'bomb',
+      bombPower: 1
+    },
+    {
+      id: 'tnt-3',
+      name: 'TNT×3',
+      nameEn: 'TNT ×3',
+      emoji: '💥',
       color: '#ef4444',
-      image: 'assets/skills/tnt.png',
-      description: '與對手隨機交換1張手牌',
-      effect: 'swap'
+      image: 'assets/skills/tnt-3.png',
+      description: '炸毀對手收集站2張怪物卡',
+      effect: 'bomb',
+      bombPower: 2
+    },
+    {
+      id: 'tnt-5',
+      name: 'TNT×5',
+      nameEn: 'TNT ×5',
+      emoji: '🔥',
+      color: '#dc2626',
+      image: 'assets/skills/tnt-5.png',
+      description: '炸毀對手收集站3張怪物卡',
+      effect: 'bomb',
+      bombPower: 3
+    },
+    {
+      id: 'freezer',
+      name: '靜止器',
+      nameEn: 'Freezer',
+      emoji: '🥶',
+      color: '#0ea5e9',
+      image: 'assets/skills/freezer.png',
+      description: '使用後下一回合自己不能抽卡',
+      effect: 'freeze'
     }
+  ],
+  stations: [
+    { id: 'station-1', name: '兔子站', image: 'assets/stations/station-1.png' },
+    { id: 'station-2', name: '倉鼠站', image: 'assets/stations/station-2.png' },
+    { id: 'station-3', name: '機器人站', image: 'assets/stations/station-3.png' }
   ]
 };
 
 // Card counts per player count
 const CARD_COUNTS = {
-  2: { monsterCopies: 2, skillCopies: 3 },
-  3: { monsterCopies: 3, skillCopies: 4 }
+  2: { monsterCopies: 2, skillCopies: 2 },
+  3: { monsterCopies: 2, skillCopies: 2 }
 };
 
 /**
