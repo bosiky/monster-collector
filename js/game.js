@@ -36,9 +36,11 @@ class MonsterCollectorGame {
 
     this.state = {
       deck: deck,
+      discardPile: [],
       players: Array.from({ length: this.playerCount }, (_, i) => ({
         index: i,
         name: this.playerNames[i],
+        hand: [],
         collection: [],
         hasShield: false,
         skipDraw: false,

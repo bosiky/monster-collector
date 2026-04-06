@@ -589,9 +589,13 @@
   opacity: 0.6;
 }
 
-/* Center Area (Hidden in new rules) */
+/* Center Area */
 .center-area {
-  display: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-md);
 }
 
 .deck-zone {
