@@ -19,6 +19,7 @@ class MonsterCollectorGame {
     this.onVictory = config.onVictory || (() => {});
     this.onNeedTarget = config.onNeedTarget || (() => {});
     this.onNeedStealChoice = config.onNeedStealChoice || (() => {});
+    this.onMonsterAutoPlaced = config.onMonsterAutoPlaced || (() => {});
 
     this.state = null;
     this.init();
@@ -29,7 +30,6 @@ class MonsterCollectorGame {
 
     // Assign random station cards to players
     const stations = CARD_DATA.stations ? [...CARD_DATA.stations] : [];
-    // Shuffle stations
     for (let i = stations.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [stations[i], stations[j]] = [stations[j], stations[i]];
@@ -52,15 +52,14 @@ class MonsterCollectorGame {
       turnNumber: 1,
       gameOver: false,
       winner: null,
-      log: []
+      log: [],
+      lastDrawnCard: null  // Track last drawn card for animations
     };
 
     this.addLog(`遊戲開始！${this.playerCount} 人對戰`);
-    this.addLog(`目標：收集 ${this.targetCards} 張怪物卡`);
+    this.addLog(`目標：收集 ${this.targetCards} 張不重複的怪物卡`);
     this.addLog(`每位玩家從 0 張手牌開始，輪流抽牌`);
     this.addLog(`${this.currentPlayerName()} 的回合`);
-    // Note: we do NOT emitState() here - the app will handle the initial render
-    // after showing the hand-off screen
   }
 
   // --- Helpers ---
@@ -86,10 +85,18 @@ class MonsterCollectorGame {
     this.onStateChange({ ...this.state });
   }
 
+  /** Return cards to deck and reshuffle */
+  returnToDeck(...cards) {
+    cards.forEach(c => this.state.deck.push(c));
+    this.state.deck = shuffleDeck(this.state.deck);
+  }
+
   // --- Core Actions ---
 
   /**
    * Phase 1: Draw a card from deck
+   * Monster cards auto-place to collection (or return to deck if duplicate)
+   * Skill cards go to hand for later use
    */
   drawCard() {
     if (this.state.phase !== 'draw') return false;
@@ -118,52 +125,53 @@ class MonsterCollectorGame {
     }
 
     const card = this.state.deck.pop();
-    this.current.hand.push(card);
+    this.state.lastDrawnCard = card;
 
-    const typeLabel = card.type === 'monster' ? '怪物卡' : '技能卡';
-    this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name} (${typeLabel})`);
-
-    this.state.phase = 'action';
-    this.emitState();
-    return card;
-  }
-
-  /**
-   * Phase 2a: Place a monster card from hand to collection
-   */
-  placeMonster(cardUid) {
-    if (this.state.phase !== 'action') return false;
-
-    const hand = this.current.hand;
-    const cardIndex = hand.findIndex(c => c.uid === cardUid);
-    if (cardIndex === -1) return false;
-
-    const card = hand[cardIndex];
-    if (card.type !== 'monster') return false;
-
-    // Move from hand to collection
-    hand.splice(cardIndex, 1);
-    this.current.collection.push(card);
-
-    this.addLog(`${this.currentPlayerName()} 將 ${card.emoji} ${card.name} 放入收集站 (${this.current.collection.length}/${this.targetCards})`);
-
-    // Check win condition
-    if (this.current.collection.length >= this.targetCards) {
-      this.state.gameOver = true;
-      this.state.winner = this.state.currentPlayer;
-      this.addLog(`🏆 ${this.currentPlayerName()} 收集了 ${this.targetCards} 張怪物卡，獲勝！`);
-      this.onVictory(this.state.currentPlayer);
+    if (card.type === 'monster') {
+      // Check for duplicate in collection
+      const hasDuplicate = this.current.collection.some(c => c.id === card.id);
+      
+      if (hasDuplicate) {
+        // Return to deck
+        this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name}，但收集站已有相同怪物！卡牌回到牌堆`);
+        this.returnToDeck(card);
+        this.state.phase = 'action';
+        this.onMonsterAutoPlaced(card, 'duplicate');
+        this.emitState();
+        return card;
+      } else {
+        // Auto place to collection
+        this.current.collection.push(card);
+        this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name}，自動放入收集站！(${this.current.collection.length}/${this.targetCards})`);
+        
+        // Check win condition
+        if (this.current.collection.length >= this.targetCards) {
+          this.state.gameOver = true;
+          this.state.winner = this.state.currentPlayer;
+          this.addLog(`🏆 ${this.currentPlayerName()} 收集了 ${this.targetCards} 張怪物卡，獲勝！`);
+          this.onMonsterAutoPlaced(card, 'placed');
+          this.onVictory(this.state.currentPlayer);
+          this.emitState();
+          return card;
+        }
+        
+        this.state.phase = 'action';
+        this.onMonsterAutoPlaced(card, 'placed');
+        this.emitState();
+        return card;
+      }
+    } else {
+      // Skill card: goes to hand
+      this.current.hand.push(card);
+      this.addLog(`${this.currentPlayerName()} 抽到了 ${card.emoji} ${card.name} (技能卡)`);
+      this.state.phase = 'action';
       this.emitState();
-      return true;
+      return card;
     }
-
-    this.state.phase = 'discard';
-    this.checkDiscard();
-    return true;
   }
 
   /**
-   * Phase 2b: Use a skill card
+   * Phase 2: Use a skill card
    */
   useSkill(cardUid) {
     if (this.state.phase !== 'action') return false;
@@ -175,15 +183,20 @@ class MonsterCollectorGame {
     const card = hand[cardIndex];
     if (card.type !== 'skill') return false;
 
-    // Remove skill from hand, add to discard
+    // Remove skill from hand
     hand.splice(cardIndex, 1);
+
+    // Shield is special: auto-attach to station
+    if (card.effect === 'shield') {
+      return this.executeShield(card);
+    }
+
+    // Other skills: add to discard temporarily (will be moved as needed)
     this.state.discardPile.push(card);
 
     switch (card.effect) {
       case 'steal':
         return this.executeSteal(card);
-      case 'shield':
-        return this.executeShield(card);
       case 'bomb':
         return this.executeBomb(card);
       case 'freeze':
@@ -194,42 +207,43 @@ class MonsterCollectorGame {
   }
 
   executeSteal(card) {
-    // Find opponents with cards in collection
     const targets = this.state.players.filter((p, i) => 
       i !== this.state.currentPlayer && p.collection.length > 0
     );
 
     if (targets.length === 0) {
-      this.addLog(`${this.currentPlayerName()} 使用了 ⚡搶奪，但沒有可偷取的目標！`);
+      this.addLog(`${this.currentPlayerName()} 使用了 🦹盜賊卡，但沒有可偷取的目標！`);
       this.state.phase = 'discard';
       this.checkDiscard();
       return true;
     }
 
-    // Need to select target
     this.state.phase = 'waiting';
     this.emitState();
     this.onNeedTarget('steal', targets, (targetIndex) => {
-      this.resolveSteal(targetIndex);
+      this.resolveSteal(targetIndex, card);
     });
     return true;
   }
 
-  resolveSteal(targetIndex) {
+  resolveSteal(targetIndex, attackCard) {
     const target = this.state.players[targetIndex];
     
-    // Check shield
+    // Check shield - both shield and attack card return to deck
     if (target.hasShield) {
       target.hasShield = false;
-      this.addLog(`${this.currentPlayerName()} 嘗試搶奪 ${target.name}，但被 🛡️護盾 擋住了！`);
+      // Remove attack card from discard pile, return both to deck
+      const attackIdx = this.state.discardPile.findIndex(c => c.uid === attackCard.uid);
+      if (attackIdx !== -1) this.state.discardPile.splice(attackIdx, 1);
+      this.returnToDeck(attackCard);
+      // Shield card already consumed when hasShield was set
+      this.addLog(`${this.currentPlayerName()} 嘗試搶奪 ${target.name}，但被 🛡️護盾 擋住了！雙方卡牌回到牌堆`);
       this.state.phase = 'discard';
       this.checkDiscard();
       return;
     }
 
-    // Need to choose which card to steal from target's collection
     if (target.collection.length === 1) {
-      // Only one card, auto-select
       this.resolveStealCard(targetIndex, 0);
     } else {
       this.onNeedStealChoice(targetIndex, target.collection, (cardIdx) => {
@@ -241,9 +255,27 @@ class MonsterCollectorGame {
   resolveStealCard(targetIndex, cardIdx) {
     const target = this.state.players[targetIndex];
     const stolen = target.collection.splice(cardIdx, 1)[0];
-    this.current.hand.push(stolen);
     
-    this.addLog(`${this.currentPlayerName()} 從 ${target.name} 的收集站偷走了 ${stolen.emoji} ${stolen.name}！`);
+    // Check if current player already has this monster in collection
+    const hasDup = this.current.collection.some(c => c.id === stolen.id);
+    if (hasDup) {
+      // Can't have duplicate - card goes to hand instead
+      this.current.hand.push(stolen);
+      this.addLog(`${this.currentPlayerName()} 從 ${target.name} 偷走了 ${stolen.emoji}${stolen.name}（收集站已有相同怪物，放入手牌）`);
+    } else {
+      this.current.collection.push(stolen);
+      this.addLog(`${this.currentPlayerName()} 從 ${target.name} 偷走了 ${stolen.emoji}${stolen.name} 放入收集站！`);
+
+      // Check win
+      if (this.current.collection.length >= this.targetCards) {
+        this.state.gameOver = true;
+        this.state.winner = this.state.currentPlayer;
+        this.addLog(`🏆 ${this.currentPlayerName()} 收集了 ${this.targetCards} 張怪物卡，獲勝！`);
+        this.onVictory(this.state.currentPlayer);
+        this.emitState();
+        return;
+      }
+    }
     
     this.state.phase = 'discard';
     this.checkDiscard();
@@ -251,7 +283,9 @@ class MonsterCollectorGame {
 
   executeShield(card) {
     this.current.hasShield = true;
-    this.addLog(`${this.currentPlayerName()} 啟動了 🛡️護盾！收集站受到保護`);
+    // Store the shield card reference for later return to deck
+    this.current._shieldCard = card;
+    this.addLog(`${this.currentPlayerName()} 掛上了 🛡️防禦盾！收集站受到保護`);
     
     this.state.phase = 'discard';
     this.checkDiscard();
@@ -260,7 +294,6 @@ class MonsterCollectorGame {
 
   executeBomb(card) {
     const bombPower = card.bombPower || 1;
-    // Find opponents with cards in collection
     const targets = this.state.players.filter((p, i) => 
       i !== this.state.currentPlayer && p.collection.length > 0
     );
@@ -287,26 +320,37 @@ class MonsterCollectorGame {
     const bombPower = this._pendingBombPower || 1;
     const card = this._pendingBombCard;
 
-    // Check shield
+    // Check shield - both shield and bomb return to deck
     if (target.hasShield) {
       target.hasShield = false;
-      this.addLog(`${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 攻擊 ${target.name}，但被 🛡️護盾 擋住了！`);
+      // Remove bomb from discard, return both to deck
+      const bombIdx = this.state.discardPile.findIndex(c => c.uid === card.uid);
+      if (bombIdx !== -1) this.state.discardPile.splice(bombIdx, 1);
+      const returnCards = [card];
+      if (target._shieldCard) {
+        returnCards.push(target._shieldCard);
+        target._shieldCard = null;
+      }
+      this.returnToDeck(...returnCards);
+      this.addLog(`${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 攻擊 ${target.name}，但被 🛡️護盾 擋住了！雙方卡牌回到牌堆`);
       this.state.phase = 'discard';
       this.checkDiscard();
       return;
     }
 
-    // Destroy random cards from collection
+    // Destroy random cards - they go back to deck (shuffled), not discard
     const destroyCount = Math.min(bombPower, target.collection.length);
     const destroyed = [];
     for (let i = 0; i < destroyCount; i++) {
       const randomIdx = Math.floor(Math.random() * target.collection.length);
       const removedCard = target.collection.splice(randomIdx, 1)[0];
-      this.state.discardPile.push(removedCard);
-      destroyed.push(`${removedCard.emoji}${removedCard.name}`);
+      destroyed.push(removedCard);
     }
+    
+    // Return destroyed cards to deck
+    this.returnToDeck(...destroyed);
 
-    this.addLog(`💥 ${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 炸毀了 ${target.name} 收集站的 ${destroyed.join('、')}！`);
+    this.addLog(`💥 ${this.currentPlayerName()} 使用 ${card.emoji}${card.name} 炸毀了 ${target.name} 收集站的 ${destroyed.map(c => `${c.emoji}${c.name}`).join('、')}！卡牌回到牌堆`);
     
     this._pendingBombPower = null;
     this._pendingBombCard = null;
@@ -315,7 +359,6 @@ class MonsterCollectorGame {
   }
 
   executeFreeze(card) {
-    // Self-freeze: skip draw next turn
     this.current.skipDraw = true;
     this.addLog(`🥶 ${this.currentPlayerName()} 使用了靜止器！下一回合無法抽牌`);
     
@@ -379,6 +422,7 @@ class MonsterCollectorGame {
   endTurn() {
     if (this.state.gameOver) return;
 
+    this.state.lastDrawnCard = null;
     this.state.currentPlayer = (this.state.currentPlayer + 1) % this.playerCount;
     if (this.state.currentPlayer === 0) {
       this.state.turnNumber++;
@@ -401,13 +445,7 @@ class MonsterCollectorGame {
     }
 
     if (this.state.phase === 'action') {
-      // Check for monster cards
-      const monsters = hand.filter(c => c.type === 'monster');
-      if (monsters.length > 0) {
-        actions.push({ type: 'place', label: '放置怪物卡', cards: monsters });
-      }
-
-      // Check for skill cards
+      // Only skill cards need manual action now (monsters auto-place)
       const skills = hand.filter(c => c.type === 'skill');
       if (skills.length > 0) {
         actions.push({ type: 'skill', label: '使用技能卡', cards: skills });

@@ -226,6 +226,35 @@ const App = {
       cards = cards.concat(CARD_DATA.skills.map((s, i) => ({ ...s, type: 'skill', uid: 100 + i })));
     }
 
+    // Render station cards
+    if ((filter === 'all' || filter === 'station') && CARD_DATA.stations) {
+      CARD_DATA.stations.forEach((st, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.textAlign = 'center';
+        const stationEl = document.createElement('div');
+        stationEl.style.cursor = 'pointer';
+        stationEl.innerHTML = `
+          <img src="${st.image}" alt="${st.name}" style="width:180px;height:180px;object-fit:cover;border-radius:12px;border:2px solid rgba(16,185,129,0.4);transition:transform 0.3s">
+        `;
+        stationEl.querySelector('img').addEventListener('mouseenter', function() { this.style.transform = 'scale(1.05)'; });
+        stationEl.querySelector('img').addEventListener('mouseleave', function() { this.style.transform = ''; });
+        stationEl.addEventListener('click', () => {
+          const overlay = document.getElementById('card-preview');
+          const container = document.getElementById('card-preview-card');
+          container.innerHTML = `<div style="text-align:center"><img src="${st.image}" style="max-width:320px;border-radius:16px;border:3px solid rgba(16,185,129,0.5)"><div style="font-family:var(--font-chinese);margin-top:12px;font-size:1.2rem;color:var(--color-accent-emerald)">${st.name}</div><div style="color:var(--color-text-muted);font-size:0.85rem;margin-top:4px">收集站背卡</div></div>`;
+          overlay.classList.add('active');
+          overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove('active'); };
+        });
+        Animations.dealCard(stationEl, i);
+        wrapper.appendChild(stationEl);
+        const info = document.createElement('div');
+        info.className = 'gallery-card-info';
+        info.textContent = st.name;
+        wrapper.appendChild(info);
+        grid.appendChild(wrapper);
+      });
+    }
+
     cards.forEach((cardData, index) => {
       const wrapper = document.createElement('div');
       wrapper.style.textAlign = 'center';
@@ -235,7 +264,6 @@ const App = {
       cardEl.style.setProperty('--card-height', '252px');
       cardEl.querySelector('.card-name').style.fontSize = '0.8rem';
 
-      // Click to preview large
       cardEl.addEventListener('click', () => {
         this.showCardPreview(cardData);
       });
@@ -385,7 +413,8 @@ const App = {
       onGameLog: (entry) => this.renderLogEntry(entry),
       onVictory: (playerIdx) => this.showVictoryScreen(playerIdx),
       onNeedTarget: (action, targets, callback) => this.showTargetSelector(action, targets, callback),
-      onNeedStealChoice: (targetIdx, cards, callback) => this.showStealChoice(targetIdx, cards, callback)
+      onNeedStealChoice: (targetIdx, cards, callback) => this.showStealChoice(targetIdx, cards, callback),
+      onMonsterAutoPlaced: (card, result) => this.animateMonsterAutoPlace(card, result)
     });
 
     this.showPage('game');
@@ -684,10 +713,10 @@ const App = {
       const cardEl = renderCard(cardData);
 
       // Highlight playable cards based on phase
-      if (state.phase === 'action') {
+      if (state.phase === 'action' && cardData.type === 'skill') {
         cardEl.classList.add('card-glow');
         cardEl.addEventListener('click', () => this.handleCardClick(cardData));
-      } else if (state.phase === 'discard' && player.hand.length > 7) {
+      } else if (state.phase === 'discard' && player.hand.length > this.settings.maxHand) {
         cardEl.classList.add('card-glow');
         cardEl.addEventListener('click', () => {
           this.game.discardCard(cardData.uid);
@@ -706,17 +735,32 @@ const App = {
   handleCardClick(cardData) {
     if (this.game.state.phase !== 'action') return;
 
-    if (cardData.type === 'monster') {
-      this.showConfirmDialog(
-        `放置 ${cardData.emoji} ${cardData.name} 到收集站？`,
-        () => this.game.placeMonster(cardData.uid)
-      );
-    } else if (cardData.type === 'skill') {
-      this.showConfirmDialog(
-        `使用 ${cardData.emoji} ${cardData.name}？<br><span style="font-size:0.9rem;color:var(--color-text-muted)">${cardData.description}</span>`,
-        () => this.game.useSkill(cardData.uid)
-      );
+    // Only skill cards need manual action (monsters auto-place on draw)
+    if (cardData.type === 'skill') {
+      const isShield = cardData.effect === 'shield';
+      const desc = isShield
+        ? `掛上 ${cardData.emoji} ${cardData.name} 保護收集站？`
+        : `使用 ${cardData.emoji} ${cardData.name}？<br><span style="font-size:0.9rem;color:var(--color-text-muted)">${cardData.description}</span>`;
+      this.showConfirmDialog(desc, () => this.game.useSkill(cardData.uid));
     }
+  },
+
+  animateMonsterAutoPlace(card, result) {
+    const msg = result === 'placed'
+      ? `${card.emoji} ${card.name} 飛入收集站！`
+      : `${card.emoji} ${card.name} 已重複，回到牌堆`;
+    const color = result === 'placed' ? '#10b981' : '#f59e0b';
+    
+    // Create inline toast
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 24px;border-radius:12px;font-family:var(--font-chinese);font-size:0.95rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease;pointer-events:none;white-space:nowrap`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.5s';
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 500);
+    }, 2000);
   },
 
   renderActionPrompt(state) {
@@ -730,11 +774,12 @@ const App = {
         </div>
       `;
     } else if (state.phase === 'action') {
+      const hasSkills = state.players[state.currentPlayer].hand.some(c => c.type === 'skill');
       container.innerHTML = `
         <div class="prompt-title">⚔️ 行動階段</div>
         <div class="prompt-actions">
           <div style="font-family:var(--font-chinese);font-size:0.8rem;color:var(--color-text-muted);text-align:center;margin-bottom:4px">
-            點擊手牌使用，或跳過
+            ${hasSkills ? '點擊技能卡使用，或跳過' : '沒有可使用的技能卡'}
           </div>
           <button class="btn btn-sm btn-outline" id="btn-skip-action">跳過行動</button>
         </div>
@@ -1212,7 +1257,8 @@ const App = {
             cards: cards.map(c => ({ uid: c.uid, name: c.name, emoji: c.emoji }))
           });
         }
-      }
+      },
+      onMonsterAutoPlaced: (card, result) => this.animateMonsterAutoPlace(card, result)
     });
 
     // Listen for client actions
